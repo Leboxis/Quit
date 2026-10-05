@@ -66,7 +66,7 @@ jobs:
       - name: Verify and package unsigned IPA
         run: |
           APP='build/Device/Build/Products/Release-iphoneos/Quit.app'
-          lipo -verify_arch arm64 "$APP/Quit"
+          lipo "$APP/Quit" -verify_arch arm64
           if codesign -dv "$APP" 2>/dev/null; then
             echo 'Unexpected application signature'; exit 1
           fi
@@ -85,6 +85,14 @@ jobs:
             build/source.json
             build/SHA256SUMS.txt
           if-no-files-found: error
+      - name: Export simulator screenshots and test summary
+        if: always()
+        continue-on-error: true
+        run: |
+          if [ -d build/TestResults.xcresult ]; then
+            xcrun xcresulttool get test-results summary --path build/TestResults.xcresult > build/TestSummary.json
+            xcrun xcresulttool export attachments --path build/TestResults.xcresult --output-path build/Screenshots
+          fi
       - name: Preserve test evidence and compiler logs
         if: always()
         uses: actions/upload-artifact@v4
@@ -92,6 +100,8 @@ jobs:
           name: quit-validation-${{ github.run_number }}
           path: |
             build/TestResults.xcresult
+            build/TestSummary.json
+            build/Screenshots
             build-tests.log
             build-device.log
           if-no-files-found: ignore
