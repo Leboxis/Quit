@@ -68,18 +68,19 @@ struct SupportContactView: View {
 }
 
 struct MessageComposer: UIViewControllerRepresentable {
+    typealias UIViewControllerType = MFMessageComposeViewController
     let recipient: String
     let message: String
     @Environment(\.dismiss) private var dismiss
     func makeCoordinator() -> Coordinator { Coordinator(onFinish: { dismiss() }) }
-    func makeUIViewController(context: Context) -> MFMessageComposeViewController {
+    func makeUIViewController(context: UIViewControllerRepresentableContext<MessageComposer>) -> MFMessageComposeViewController {
         let controller = MFMessageComposeViewController()
         controller.recipients = [recipient]
         controller.body = message
         controller.messageComposeDelegate = context.coordinator
         return controller
     }
-    func updateUIViewController(_ controller: MFMessageComposeViewController, context: Context) { }
+    func updateUIViewController(_ controller: MFMessageComposeViewController, context: UIViewControllerRepresentableContext<MessageComposer>) { }
     final class Coordinator: NSObject, MFMessageComposeViewControllerDelegate {
         let onFinish: () -> Void
         init(onFinish: @escaping () -> Void) { self.onFinish = onFinish }
