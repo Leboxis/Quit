@@ -1,0 +1,44 @@
+{
+  "name": "Quit",
+  "identifier": "fr.leboxis.quit.source",
+  "sourceURL": "https://raw.githubusercontent.com/Leboxis/Quit/catalog/source.json",
+  "subtitle": "Ton parcours, tes choix.",
+  "description": "Source officielle de Quit pour SideStore et LiveContainer.",
+  "iconURL": "https://raw.githubusercontent.com/Leboxis/Quit/main/docs/design/icon.png",
+  "website": "https://github.com/Leboxis/Quit",
+  "tintColor": "346451",
+  "apps": [
+    {
+      "name": "Quit",
+      "bundleIdentifier": "fr.leboxis.quit",
+      "developerName": "Leboxis",
+      "subtitle": "Reprendre le contrôle, un geste à la fois.",
+      "localizedDescription": "Un compagnon privé pour changer son usage de pornographie. Check-in, SOS, journal sans jugement, plans Si → Alors et 42 exercices. Données locales, aucune publicité. Ne remplace pas un professionnel. Cette build sans extensions ne bloque pas automatiquement les applications.",
+      "iconURL": "https://raw.githubusercontent.com/Leboxis/Quit/main/docs/design/icon.png",
+      "tintColor": "346451",
+      "versions": [
+        {
+          "version": "0.1.3",
+          "buildVersion": "3",
+          "date": "2026-10-05",
+          "localizedDescription": "Version automatique de Quit : SOS, journal, parcours et progrès privés.",
+          "downloadURL": "https://github.com/Leboxis/Quit/releases/download/v0.1.3/Quit.ipa",
+          "size": 966206,
+          "minOSVersion": "18.0"
+        }
+      ],
+      "version": "0.1.3",
+      "versionDate": "2026-10-05",
+      "versionDescription": "Version automatique de Quit : SOS, journal, parcours et progrès privés.",
+      "downloadURL": "https://github.com/Leboxis/Quit/releases/download/v0.1.3/Quit.ipa",
+      "size": 966206,
+      "appPermissions": {
+        "entitlements": [],
+        "privacy": {
+          "NSFaceIDUsageDescription": "Déverrouiller ton espace personnel Quit."
+        }
+      }
+    }
+  ],
+  "news": []
+}
