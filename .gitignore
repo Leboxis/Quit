@@ -1,0 +1,13 @@
+.DS_Store
+build/
+DerivedData/
+*.xcuserstate
+xcuserdata/
+*.ipa
+*.xcresult/
+__pycache__/
+.pytest_cache/
+.env
+*.p12
+*.mobileprovision
+Quit.xcodeproj/

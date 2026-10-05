@@ -1,0 +1,338 @@
+[
+  {
+    "id": 1,
+    "title": "Une envie n’est pas un ordre",
+    "body": "Une envie peut être forte sans décider de ton prochain geste. Remarquer une sensation et choisir une action sont deux événements différents. Aujourd’hui, il suffit de repérer cet espace, même s’il te semble très court.",
+    "prompt": "Quand ai-je déjà choisi une autre action malgré une envie ?",
+    "action": "Complète : « Je remarque une envie, et je choisis de… »",
+    "source": "https://pubmed.ncbi.nlm.nih.gov/37880509/"
+  },
+  {
+    "id": 2,
+    "title": "Mon objectif m’appartient",
+    "body": "Arrêter ou réduire peut prendre différentes formes. Choisis un objectif qui améliore ta vie plutôt qu’un chiffre imposé. Tu peux réviser cet objectif. Ta sexualité et la masturbation ne sont pas des échecs : ce parcours concerne l’usage de pornographie que tu veux changer.",
+    "prompt": "Qu’est-ce que je souhaite retrouver dans mon quotidien ?",
+    "action": "Note une raison personnelle, précise et bienveillante.",
+    "source": "https://pubmed.ncbi.nlm.nih.gov/37880509/"
+  },
+  {
+    "id": 3,
+    "title": "Observer mon cycle",
+    "body": "Un épisode commence souvent par une suite de petites étapes : un contexte, une émotion, une pensée, un geste. Observer cette chaîne aide à trouver un endroit où intervenir. Il ne s’agit pas de chercher une faute.",
+    "prompt": "Quelle suite de gestes a précédé mon dernier épisode ?",
+    "action": "Reconstitue trois étapes : avant, pendant, après.",
+    "source": "https://pubmed.ncbi.nlm.nih.gov/37880509/"
+  },
+  {
+    "id": 4,
+    "title": "Le soulagement à court terme",
+    "body": "Certains comportements apportent un soulagement immédiat mais ont un coût plus tard. Les deux peuvent être vrais. Comprendre ce que le comportement t’apporte aide à chercher une alternative qui répond au même besoin.",
+    "prompt": "Quel besoin cherchais-je à satisfaire ?",
+    "action": "Note un bénéfice immédiat et un coût à plus long terme.",
+    "source": "https://pubmed.ncbi.nlm.nih.gov/37880509/"
+  },
+  {
+    "id": 5,
+    "title": "Un check-in sans jugement",
+    "body": "Un check-in est une photographie, pas une note. Stress, énergie et intensité peuvent changer dans la journée. Une réponse difficile n’est pas un mauvais résultat : elle donne une information utile pour choisir un geste adapté.",
+    "prompt": "Qu’est-ce que je ressens maintenant ?",
+    "action": "Fais un check-in sans chercher la « bonne » réponse.",
+    "source": "https://pubmed.ncbi.nlm.nih.gov/37880509/"
+  },
+  {
+    "id": 6,
+    "title": "Les jours inconnus",
+    "body": "Une journée sans saisie reste inconnue. L’app ne devine ni réussite ni épisode. Mieux vaut quelques observations honnêtes qu’un historique parfait inventé. Tu peux aussi choisir de moins suivre si cela te préoccupe trop.",
+    "prompt": "Quel rythme de suivi me semble utile et supportable ?",
+    "action": "Choisis un moment simple pour ton prochain bilan.",
+    "source": "https://pubmed.ncbi.nlm.nih.gov/37880509/"
+  },
+  {
+    "id": 7,
+    "title": "Mon premier bilan",
+    "body": "Cherche une chose apprise cette semaine, même petite. Le but est de mieux comprendre tes choix et de revenir à ton plan. Un compteur de jours ne décrit pas à lui seul ce que tu as acquis.",
+    "prompt": "Qu’est-ce que j’ai compris sur mon cycle ?",
+    "action": "Garde un repère utile et une action à essayer la semaine prochaine.",
+    "source": "https://pubmed.ncbi.nlm.nih.gov/37880509/"
+  },
+  {
+    "id": 8,
+    "title": "Les lieux qui reviennent",
+    "body": "Certains lieux facilitent un automatisme : le lit, un bureau isolé ou un espace où le téléphone est toujours proche. Le lieu ne cause pas forcément l’épisode, mais il peut offrir une occasion de changer le contexte.",
+    "prompt": "Dans quel lieu ai-je le plus besoin d’une pause ?",
+    "action": "Choisis un autre endroit où aller pendant une envie.",
+    "source": "https://pubmed.ncbi.nlm.nih.gov/37880509/"
+  },
+  {
+    "id": 9,
+    "title": "Les moments sensibles",
+    "body": "Fatigue et habitudes horaires peuvent rendre un moment plus difficile. Tes enregistrements décrivent ce qui s’est passé ; ils ne prédisent pas l’avenir. Prépare une action pour une fenêtre qui revient dans ton expérience.",
+    "prompt": "Quelle période de la journée revient souvent ?",
+    "action": "Prépare un geste dix minutes avant cette fenêtre.",
+    "source": "https://pubmed.ncbi.nlm.nih.gov/37880509/"
+  },
+  {
+    "id": 10,
+    "title": "Le scrolling comme première étape",
+    "body": "Un contenu suggestif peut apparaître bien avant une recherche volontaire. Repérer le premier geste de scrolling offre une interruption possible. Une modification de l’environnement peut rendre cette interruption plus facile.",
+    "prompt": "Quel compte, écran ou geste me fait continuer à scroller ?",
+    "action": "Retire une notification ou un abonnement que tu choisis.",
+    "source": "https://pubmed.ncbi.nlm.nih.gov/37880509/"
+  },
+  {
+    "id": 11,
+    "title": "Stress : repérer le besoin",
+    "body": "Quand le stress monte, une envie peut devenir une façon de chercher du soulagement. Prends un instant pour identifier ce qui pèse sur toi. Une action très courte peut répondre au besoin de repos ou de soutien.",
+    "prompt": "Qu’est-ce qui me met sous pression aujourd’hui ?",
+    "action": "Choisis une pause ou une petite demande d’aide concrète.",
+    "source": "https://pubmed.ncbi.nlm.nih.gov/37880509/"
+  },
+  {
+    "id": 12,
+    "title": "Solitude : chercher du lien",
+    "body": "Se sentir seul ne se résout pas toujours par une distraction. Un contact léger peut être plus adapté : parler, rejoindre un espace partagé, ou prévoir un moment avec quelqu’un. Tu n’as pas besoin d’expliquer tout ton parcours.",
+    "prompt": "Qui puis-je contacter sans devoir tout expliquer ?",
+    "action": "Prépare un message : « Tu as cinq minutes pour parler ? »",
+    "source": "https://pubmed.ncbi.nlm.nih.gov/37880509/"
+  },
+  {
+    "id": 13,
+    "title": "Ennui : rendre une alternative visible",
+    "body": "L’ennui peut laisser de la place à un automatisme. Une alternative fonctionne mieux si elle est déjà accessible et te plaît un minimum. Une activité simple est parfois plus utile qu’un grand programme.",
+    "prompt": "Quelle activité courte ai-je envie de rendre facile ?",
+    "action": "Place un livre, une musique ou une tâche légère à portée.",
+    "source": "https://pubmed.ncbi.nlm.nih.gov/37880509/"
+  },
+  {
+    "id": 14,
+    "title": "Ma carte personnelle",
+    "body": "Regroupe un moment, une émotion et un contexte qui reviennent. Il n’est pas nécessaire d’avoir un grand nombre de données pour préparer un geste. Garde les conclusions provisoires et révise-les avec ton expérience.",
+    "prompt": "Quel motif me semble le plus utile à préparer ?",
+    "action": "Écris un plan Si → Alors pour un seul motif.",
+    "source": "https://pubmed.ncbi.nlm.nih.gov/37880509/"
+  },
+  {
+    "id": 15,
+    "title": "Créer une rupture physique",
+    "body": "Changer de pièce ou poser le téléphone peut interrompre une séquence avant qu’elle devienne automatique. Cette pause ne supprime pas forcément l’envie. Elle sert à retrouver une possibilité de choisir.",
+    "prompt": "Quel geste physique est faisable en moins de dix secondes ?",
+    "action": "Essaie maintenant de te lever et de poser le téléphone.",
+    "source": "https://pubmed.ncbi.nlm.nih.gov/27157029/"
+  },
+  {
+    "id": 16,
+    "title": "Observer la vague",
+    "body": "L’intensité d’une envie peut changer avec le temps. Observe les sensations sans chercher à les forcer à disparaître. Si l’exercice t’inconforte, reviens à ce qui t’entoure ou choisis une autre stratégie.",
+    "prompt": "Où est-ce que je ressens l’envie dans mon corps ?",
+    "action": "Observe pendant une minute, avec une respiration naturelle.",
+    "source": "https://pubmed.ncbi.nlm.nih.gov/27157029/"
+  },
+  {
+    "id": 17,
+    "title": "Rester avec une sensation",
+    "body": "Décris une sensation avec des mots simples : chaleur, tension, agitation. Cette description n’est ni une approbation ni une obligation d’agir. Tu peux garder les yeux ouverts et t’arrêter si cela ne t’aide pas.",
+    "prompt": "Quels mots décrivent ce que je ressens ?",
+    "action": "Nomme trois sensations sans les évaluer.",
+    "source": "https://pubmed.ncbi.nlm.nih.gov/27157029/"
+  },
+  {
+    "id": 18,
+    "title": "Retarder le prochain geste",
+    "body": "Un délai court peut créer un espace de décision. Il n’est pas nécessaire de promettre que l’envie aura disparu à la fin. Choisis un geste pour les prochaines minutes, puis réévalue ce dont tu as besoin.",
+    "prompt": "Qu’est-ce que je peux faire pendant les cinq prochaines minutes ?",
+    "action": "Prépare une alternative avant de remettre le téléphone en main.",
+    "source": "https://pubmed.ncbi.nlm.nih.gov/27157029/"
+  },
+  {
+    "id": 19,
+    "title": "Choisir une action adaptée",
+    "body": "Une stratégie a plus de chances d’être utilisée si elle correspond au besoin : lien quand tu te sens seul, repos quand tu es épuisé, mouvement quand tu tournes en rond. Tes préférences comptent.",
+    "prompt": "Quelle action répond le mieux à mon besoin maintenant ?",
+    "action": "Essaie une action et note l’intensité avant et après.",
+    "source": "https://pubmed.ncbi.nlm.nih.gov/27157029/"
+  },
+  {
+    "id": 20,
+    "title": "Quand l’envie reste forte",
+    "body": "Une envie qui reste forte ne veut pas dire que tu as mal fait l’exercice. Change de contexte, essaie un autre geste ou demande du soutien. Le but est d’élargir tes possibilités, pas de réussir un test.",
+    "prompt": "Quel est mon deuxième geste si le premier ne suffit pas ?",
+    "action": "Prépare deux options simples et une personne à contacter.",
+    "source": "https://pubmed.ncbi.nlm.nih.gov/27157029/"
+  },
+  {
+    "id": 21,
+    "title": "Ce qui semble m’aider",
+    "body": "Les chiffres avant et après une action donnent un repère personnel. Peu d’observations ne suffisent pas à prouver une efficacité. Cherche aussi ce qui rend une stratégie faisable dans ta vraie journée.",
+    "prompt": "Quelle stratégie puis-je répéter facilement ?",
+    "action": "Garde une stratégie utile et une solution de secours.",
+    "source": "https://pubmed.ncbi.nlm.nih.gov/27157029/"
+  },
+  {
+    "id": 22,
+    "title": "Je remarque une pensée",
+    "body": "Une pensée peut se présenter comme un ordre : « Il faut que je regarde. » Ajouter « je remarque la pensée que… » peut créer une distance. La pensée reste présente ; ton action n’est pas décidée pour autant.",
+    "prompt": "Quelle pensée apparaît souvent avant l’automatisme ?",
+    "action": "Reformule-la avec « Je remarque la pensée que… »",
+    "source": "https://pubmed.ncbi.nlm.nih.gov/27157029/"
+  },
+  {
+    "id": 23,
+    "title": "Mes valeurs, en pratique",
+    "body": "Une valeur est une direction : présence, liberté, intimité, soin de soi. Elle devient utile quand elle se traduit en un petit geste. Ce geste peut être choisi aujourd’hui, sans attendre de te sentir parfaitement motivé.",
+    "prompt": "Quelle direction voudrais-je suivre dans ma vie ?",
+    "action": "Associe une valeur à un geste de deux minutes.",
+    "source": "https://pubmed.ncbi.nlm.nih.gov/27157029/"
+  },
+  {
+    "id": 24,
+    "title": "Accueillir une émotion",
+    "body": "Une émotion difficile peut mériter attention, repos ou soutien. La faire disparaître n’est pas toujours possible immédiatement. Tu peux reconnaître ce qui est là et choisir une réponse qui prend soin de toi.",
+    "prompt": "De quoi cette émotion me signale-t-elle le besoin ?",
+    "action": "Dis-toi : « C’est difficile, et je peux choisir un geste utile. »",
+    "source": "https://pubmed.ncbi.nlm.nih.gov/27157029/"
+  },
+  {
+    "id": 25,
+    "title": "Le piège du tout ou rien",
+    "body": "« Tout est perdu » peut apparaître après un écart. Cette pensée ne décrit pas l’ensemble de ton parcours. Les journées, les stratégies et les apprentissages restent là. Un prochain geste est possible maintenant.",
+    "prompt": "Quelle phrase tout ou rien me vient après un épisode ?",
+    "action": "Remplace-la par une description précise de ce qui s’est passé.",
+    "source": "https://pubmed.ncbi.nlm.nih.gov/27157029/"
+  },
+  {
+    "id": 26,
+    "title": "Me parler comme à un ami",
+    "body": "La manière dont tu te parles peut faciliter ou compliquer ton retour au plan. Un ton bienveillant peut reconnaître les conséquences sans transformer un épisode en jugement sur ta personne.",
+    "prompt": "Que dirais-je à un ami dans cette situation ?",
+    "action": "Écris cette même phrase pour toi.",
+    "source": "https://pubmed.ncbi.nlm.nih.gov/27157029/"
+  },
+  {
+    "id": 27,
+    "title": "Une sexualité qui me ressemble",
+    "body": "Ce parcours ne classe pas la sexualité comme bonne ou mauvaise. Il vise les comportements que tu veux changer et leurs conséquences. Si la honte ou un conflit de valeurs prennent beaucoup de place, en parler à un professionnel peut aider.",
+    "prompt": "Quels choix sexuels me semblent libres et respectueux de moi ?",
+    "action": "Note une question à explorer sans te juger.",
+    "source": "https://pubmed.ncbi.nlm.nih.gov/27157029/"
+  },
+  {
+    "id": 28,
+    "title": "Ma direction cette semaine",
+    "body": "Relis ton intention personnelle. Si elle sonne comme une punition, tu peux la reformuler autour de ce que tu veux retrouver. Une direction utile reste compréhensible dans une journée ordinaire.",
+    "prompt": "Mon intention me soutient-elle encore ?",
+    "action": "Réécris-la si nécessaire dans les réglages.",
+    "source": "https://pubmed.ncbi.nlm.nih.gov/27157029/"
+  },
+  {
+    "id": 29,
+    "title": "Une place pour mon téléphone",
+    "body": "Le téléphone peut rester disponible tout en ayant une place choisie hors d’un contexte sensible. Préparer cette place avant le soir demande moins de décisions pendant une envie. Ce geste reste volontaire.",
+    "prompt": "Où puis-je charger mon téléphone hors de la chambre ?",
+    "action": "Prépare cet endroit aujourd’hui.",
+    "source": "https://pubmed.ncbi.nlm.nih.gov/37880509/"
+  },
+  {
+    "id": 30,
+    "title": "Ma fenêtre sensible",
+    "body": "Un plan peut commencer avant le moment le plus difficile. Choisis une heure et un geste modeste. Le plan n’a pas besoin de couvrir toute ta journée ni de restreindre toutes tes activités.",
+    "prompt": "Quel geste puis-je préparer avant cette fenêtre ?",
+    "action": "Crée un plan Si → Alors avec une heure précise.",
+    "source": "https://pubmed.ncbi.nlm.nih.gov/37880509/"
+  },
+  {
+    "id": 31,
+    "title": "Les limites iOS comme friction",
+    "body": "Temps d’écran peut ajouter des limites et des restrictions volontaires. Cette version de Quit ne les active pas automatiquement. Un blocage ne remplace pas l’apprentissage ni l’aide humaine et peut être contourné.",
+    "prompt": "Quelle friction volontaire me serait utile ?",
+    "action": "Explore Temps d’écran dans Réglages, sans te promettre une protection absolue.",
+    "source": "https://pubmed.ncbi.nlm.nih.gov/37880509/"
+  },
+  {
+    "id": 32,
+    "title": "Réduire les premières occasions",
+    "body": "Une notification ou un raccourci visible peut relancer une habitude. Tu peux retirer une occasion sans chercher à contrôler tous les contenus possibles. Préserve aussi les outils et contacts utiles dans ta vie.",
+    "prompt": "Quel déclencheur numérique puis-je rendre moins visible ?",
+    "action": "Désactive une notification ou déplace une app que tu choisis.",
+    "source": "https://pubmed.ncbi.nlm.nih.gov/37880509/"
+  },
+  {
+    "id": 33,
+    "title": "Préparer une soirée simple",
+    "body": "Une soirée structurée n’a pas besoin d’être chargée. Repas, repos, lien ou activité légère peuvent créer un cadre prévisible. La fatigue mérite parfois surtout du sommeil et moins d’écrans.",
+    "prompt": "Quel petit rituel m’aiderait à terminer la journée ?",
+    "action": "Prépare une séquence de deux gestes pour ce soir.",
+    "source": "https://pubmed.ncbi.nlm.nih.gov/37880509/"
+  },
+  {
+    "id": 34,
+    "title": "Mon contact de soutien",
+    "body": "Le soutien ne doit pas devenir de la surveillance. Tu choisis quoi partager et avec qui. Un contact peut simplement offrir une conversation ou de la présence, sans recevoir tes données personnelles.",
+    "prompt": "Quel soutien ai-je envie de demander ?",
+    "action": "Prépare un contact et un message dans l’onglet Aide.",
+    "source": "https://pubmed.ncbi.nlm.nih.gov/37880509/"
+  },
+  {
+    "id": 35,
+    "title": "Un environnement ajustable",
+    "body": "Un plan qui ne tient pas dans ta vie mérite un ajustement. Observe ce qui a été difficile à appliquer : horaire, effort, lieu ou besoin mal identifié. Réduire la taille d’un geste peut le rendre plus utile.",
+    "prompt": "Quel plan gagnerait à être plus simple ?",
+    "action": "Révise un plan à partir de ce que tu as essayé.",
+    "source": "https://pubmed.ncbi.nlm.nih.gov/37880509/"
+  },
+  {
+    "id": 36,
+    "title": "Comprendre un écart",
+    "body": "Reconstituer un épisode sert à apprendre, pas à te punir. Choisis quelques informations : émotion, contexte, déclencheur et premier geste. Une analyse courte suffit souvent pour préparer la suite.",
+    "prompt": "À quel moment aurais-je pu interrompre la chaîne ?",
+    "action": "Utilise le journal pour trouver une interruption précise.",
+    "source": "https://pubmed.ncbi.nlm.nih.gov/37880509/"
+  },
+  {
+    "id": 37,
+    "title": "Reprendre le jour même",
+    "body": "Un épisode n’oblige pas à poursuivre pendant des jours. Tu peux revenir à un geste ordinaire : fermer un écran, changer de pièce, manger ou contacter quelqu’un. Le retour au plan se fait à ton rythme.",
+    "prompt": "Quel geste marque pour moi le retour à mon plan ?",
+    "action": "Choisis ce geste et note le retour quand il a réellement eu lieu.",
+    "source": "https://pubmed.ncbi.nlm.nih.gov/37880509/"
+  },
+  {
+    "id": 38,
+    "title": "Mon plan de secours",
+    "body": "Prévoir une option de secours réduit le nombre de décisions à prendre pendant un moment difficile. Une stratégie peut ne pas être disponible : pluie, absence d’un ami, fatigue. Prépare une autre possibilité.",
+    "prompt": "Que puis-je faire si ma première option est impossible ?",
+    "action": "Écris une alternative faisable sans matériel ni connexion.",
+    "source": "https://pubmed.ncbi.nlm.nih.gov/37880509/"
+  },
+  {
+    "id": 39,
+    "title": "Quand demander davantage d’aide",
+    "body": "Si la perte de contrôle persiste ou affecte nettement ta vie, un accompagnement professionnel peut être utile. Tu n’as pas besoin d’atteindre un score ou une gravité arbitraire pour demander de l’aide.",
+    "prompt": "Quel point aimerais-je discuter avec un professionnel ?",
+    "action": "Explore les ressources d’Aide ou prépare une question pour un rendez-vous.",
+    "source": "https://pubmed.ncbi.nlm.nih.gov/37880509/"
+  },
+  {
+    "id": 40,
+    "title": "Des progrès qui restent",
+    "body": "Observe plusieurs dimensions : fréquence des épisodes, intensité des envies, actions essayées et retour au plan. Une amélioration ne se produit pas forcément partout en même temps. Les données restent des repères, pas un verdict.",
+    "prompt": "Quel progrès vois-je au-delà d’un compteur ?",
+    "action": "Note un apprentissage et un changement concret dans ta vie.",
+    "source": "https://pubmed.ncbi.nlm.nih.gov/37880509/"
+  },
+  {
+    "id": 41,
+    "title": "Avoir moins besoin de l’app",
+    "body": "L’app est un outil, pas une activité à entretenir pour elle-même. Quand tes gestes deviennent plus naturels, tu peux réduire le suivi ou les rappels. Le soutien humain et les activités qui comptent gardent leur place.",
+    "prompt": "Quel rythme de suivi me serait utile à présent ?",
+    "action": "Choisis moins de suivi si cela te convient.",
+    "source": "https://pubmed.ncbi.nlm.nih.gov/37880509/"
+  },
+  {
+    "id": 42,
+    "title": "Mon prochain chapitre",
+    "body": "Relis ce que tu as appris et garde quelques outils simples. Ton parcours peut continuer avec des ajustements, du soutien et des retours ponctuels. Une difficulté future ne rendra pas ces apprentissages inexistants.",
+    "prompt": "Quels trois repères ai-je envie de conserver ?",
+    "action": "Garde une intention, un geste pour les envies et un plan de retour.",
+    "source": "https://pubmed.ncbi.nlm.nih.gov/37880509/"
+  }
+]

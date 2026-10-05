@@ -1,0 +1,136 @@
+name: Build and release unsigned Quit IPA
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate scripts and original learning content
+        run: |
+          python3 -m compileall -q scripts tests
+          python3 scripts/validate_resources.py
+          python3 -m unittest discover -s tests -v
+
+  build:
+    needs: checks
+    runs-on: macos-26
+    timeout-minutes: 45
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Select newest available Xcode (prefer 27)
+        run: python3 scripts/select_xcode.py
+      - name: Install XcodeGen
+        run: brew install xcodegen
+      - name: Set a monotonically increasing app version
+        id: version
+        run: echo "version=0.1.${GITHUB_RUN_NUMBER}" >> "$GITHUB_OUTPUT"
+      - name: Generate Xcode project
+        run: xcodegen generate
+      - name: Start available iPhone Simulator
+        id: simulator
+        run: python3 scripts/select_simulator.py
+      - name: Run XCTest and core user flow
+        env:
+          SIMULATOR_ID: ${{ steps.simulator.outputs.udid }}
+        run: |
+          set -o pipefail
+          xcodebuild test -project Quit.xcodeproj -scheme Quit -configuration Debug \
+            -destination "platform=iOS Simulator,id=$SIMULATOR_ID" \
+            -derivedDataPath build/Simulator -resultBundlePath build/TestResults.xcresult \
+            -parallel-testing-enabled NO CODE_SIGNING_ALLOWED=NO 2>&1 | tee build-tests.log
+      - name: Build unsigned arm64 application for iPhone/iPad
+        env:
+          QUIT_VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -o pipefail
+          xcodebuild build -project Quit.xcodeproj -scheme Quit -configuration Release \
+            -sdk iphoneos -destination 'generic/platform=iOS' -derivedDataPath build/Device \
+            ARCHS=arm64 ONLY_ACTIVE_ARCH=NO CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY='' MARKETING_VERSION="$QUIT_VERSION" CURRENT_PROJECT_VERSION="$GITHUB_RUN_NUMBER" \
+            2>&1 | tee build-device.log
+      - name: Verify and package unsigned IPA
+        run: |
+          APP='build/Device/Build/Products/Release-iphoneos/Quit.app'
+          lipo -verify_arch arm64 "$APP/Quit"
+          if codesign -dv "$APP" 2>/dev/null; then
+            echo 'Unexpected application signature'; exit 1
+          fi
+          python3 scripts/distribution.py pack --app "$APP" --output build/Quit.ipa
+      - name: Build source and checksum from compiled Info.plist
+        env:
+          QUIT_VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          python3 scripts/distribution.py source --ipa build/Quit.ipa --repository "$GITHUB_REPOSITORY" \
+            --tag "v$QUIT_VERSION" --date "$(date -u +%F)" --output build/source.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: quit-unsigned-${{ github.sha }}
+          path: |
+            build/Quit.ipa
+            build/source.json
+            build/SHA256SUMS.txt
+          if-no-files-found: error
+      - name: Preserve test evidence and compiler logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: quit-validation-${{ github.run_number }}
+          path: |
+            build/TestResults.xcresult
+            build-tests.log
+            build-device.log
+          if-no-files-found: ignore
+
+  publish:
+    needs: build
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      QUIT_VERSION: ${{ needs.build.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: quit-unsigned-${{ github.sha }}
+          path: build
+      - name: Publish immutable per-push release
+        run: |
+          TAG="v$QUIT_VERSION"
+          cat > build/release-notes.md <<EOF
+          Quit $QUIT_VERSION · build automatique du commit $GITHUB_SHA.
+
+          IPA arm64 non signé pour SideStore ou LiveContainer. iOS 18 minimum.
+          Check-in, SOS, journal, 42 exercices, statistiques locales et plans Si → Alors.
+          Aucun certificat, profil de provisioning ni extension Screen Time inclus.
+
+          Source de mises à jour : https://raw.githubusercontent.com/$GITHUB_REPOSITORY/catalog/source.json
+          La signature ou la préparation nécessaire est effectuée par votre outil d'installation.
+          Quit ne remplace pas un accompagnement professionnel.
+          EOF
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" build/Quit.ipa build/source.json build/SHA256SUMS.txt --clobber
+          else
+            gh release create "$TAG" build/Quit.ipa build/source.json build/SHA256SUMS.txt \
+              --target "$GITHUB_SHA" --title "Quit $QUIT_VERSION" --notes-file build/release-notes.md --latest=false
+          fi
+      - name: Update SideStore/LiveContainer catalog without triggering main
+        run: python3 scripts/publish_catalog.py
