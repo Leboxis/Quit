@@ -44,13 +44,6 @@ jobs:
       - name: Start available iPhone Simulator
         id: simulator
         run: python3 scripts/select_simulator.py
-      - name: Restore the simulator build
-        uses: actions/cache@v4
-        with:
-          path: build/Simulator
-          key: simulator-${{ runner.os }}-${{ hashFiles('project.yml', 'Quit/**') }}
-          restore-keys: |
-            simulator-${{ runner.os }}-
       - name: Build the app and its tests for the simulator
         env:
           SIMULATOR_ID: ${{ steps.simulator.outputs.udid }}
