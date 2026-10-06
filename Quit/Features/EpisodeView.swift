@@ -173,6 +173,11 @@ struct EpisodeView: View {
                     Text(action)
                 }
             }
+            let reco = JourneyCatalog.recommendation(for: store.data)
+            NavigationLink { JourneyPathView(path: reco.path) } label: {
+                QuietRow(title: "Une leçon utile : \(reco.path.title)", detail: reco.reason, symbol: "book", tone: .reflection)
+            }.buttonStyle(.plain).accessibilityIdentifier("episode.lesson")
+            NavigationLink("Sources et limites") { EvidenceView() }.font(.footnote).frame(minHeight: 44)
             if store.data.episodes.first(where: { $0.id == draftID })?.recoveredAt == nil {
                 QuitPrimaryButton(title: "Reprendre mon plan maintenant", symbol: "arrow.uturn.forward") {
                     if store.resumePlan(after: draftID) { dismiss() }

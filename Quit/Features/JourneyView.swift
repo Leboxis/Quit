@@ -5,6 +5,13 @@ struct JourneyView: View {
 
     var body: some View {
         ScreenContent {
+            let reco = JourneyCatalog.recommendation(for: store.data)
+            NavigationLink { JourneyPathView(path: reco.path) } label: {
+                QuitCard(tinted: true) {
+                    QuietRow(title: "Pour toi : \(reco.path.title)", detail: reco.reason, symbol: "sparkles",
+                             tone: reco.path.id == "urges" ? .reflection : .preparation)
+                }
+            }.buttonStyle(.plain).accessibilityIdentifier("journey.recommended")
             ForEach(JourneyCatalog.paths) { path in
                 NavigationLink { JourneyPathView(path: path) } label: {
                     QuitCard {
