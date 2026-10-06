@@ -39,13 +39,11 @@ final class AppStore {
     @discardableResult
     func saveCheckIn(_ item: DailyCheckIn) -> Bool {
         update { data in
-            if let index = data.checkIns.firstIndex(where: { Calendar.current.isDate($0.date, inSameDayAs: item.date) }) {
-                var revised = item
-                revised.id = data.checkIns[index].id
-                data.checkIns[index] = revised
-            } else {
-                data.checkIns.append(item)
-            }
+            let previous = CheckInHistory(checkIns: data.checkIns).checkIn(on: item.date)
+            var revised = item
+            if let previous { revised.id = previous.id }
+            data.checkIns.removeAll { Calendar.current.isDate($0.date, inSameDayAs: item.date) }
+            data.checkIns.append(revised)
         }
     }
 

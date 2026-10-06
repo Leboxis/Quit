@@ -5,14 +5,15 @@ struct InsightsView: View {
     @Environment(\.quitAccent) private var accent
     @Environment(AppStore.self) private var store
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @State private var showGuide = false
     var body: some View {
         let stats = ProgressSnapshot(data: store.data)
+        let history = CheckInHistory(checkIns: store.data.checkIns)
+        let hasCheckIns = stats.days.contains { history.checkIn(on: $0.date) != nil }
         ScreenContent {
-            Text("Tes repères sur les 30 derniers jours, à partir de tes saisies.")
-                .font(.subheadline).foregroundStyle(QuitTheme.secondary)
-            if stats.observedDays == 0 && stats.urges.isEmpty && stats.episodes.isEmpty {
+            if !hasCheckIns && stats.observedDays == 0 && stats.urges.isEmpty && stats.episodes.isEmpty {
                 ContentUnavailableView("Tes repères se construisent", systemImage: "chart.xyaxis.line",
-                                       description: Text("Un check-in, une envie ou un épisode suffit pour commencer. Aucune journée sans saisie n'est déduite comme réussie."))
+                                       description: Text("Enregistre ton premier check-in pour voir ton suivi."))
             } else {
                 dayOverview(stats)
                 if !stats.urges.isEmpty {
@@ -41,33 +42,40 @@ struct InsightsView: View {
                 }
             }
             QuitCard {
-                QuitSectionTitle(title: "Mon journal", symbol: "book.closed", tone: .reflection)
+                QuitSectionTitle(title: "Mon historique", symbol: "book.closed", tone: .reflection)
                 if let hours = stats.averageRecoveryHours {
                     Text("\(hours.formatted(.number.precision(.fractionLength(1)))) h en moyenne")
                         .font(.title2.weight(.medium))
-                    Text("Pour revenir à ton plan, sur \(stats.episodes.filter { $0.recoveredAt != nil }.count) retours renseignés.")
+                    Text("Retour au plan · \(stats.episodes.filter { $0.recoveredAt != nil }.count) retours")
                         .font(.footnote).foregroundStyle(QuitTheme.secondary)
-                } else {
-                    Text("Après un épisode, note le moment où tu reprends ton plan. Ce progrès compte aussi.")
-                        .foregroundStyle(QuitTheme.secondary)
                 }
+                NavigationLink { CheckInCalendarView() } label: {
+                    QuietRow(title: "Calendrier des check-ins", symbol: "calendar", tone: .reflection)
+                }.buttonStyle(.plain).accessibilityIdentifier("insights.calendar")
+                Divider()
                 NavigationLink { JournalView() } label: {
                     QuietRow(title: "Ouvrir mon journal", detail: "Check-ins, envies et épisodes", symbol: "book.closed", tone: .reflection)
                 }.buttonStyle(.plain)
                     .accessibilityIdentifier("journal.open")
             }
         }.navigationTitle("Comprendre")
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Lire mes graphiques", systemImage: "info.circle") { showGuide = true }
+                }
+            }
+            .sheet(isPresented: $showGuide) { InsightsGuideView() }
     }
 
     private func dayOverview(_ stats: ProgressSnapshot) -> some View {
         QuitCard(tinted: true) {
-            QuitSectionTitle(title: "Mes journées", symbol: "calendar")
+            QuitSectionTitle(title: "Mes journées · \(stats.days.count) jours", symbol: "calendar")
             let layout = dynamicTypeSize.isAccessibilitySize
                 ? AnyLayout(VStackLayout(alignment: .leading, spacing: 12))
                 : AnyLayout(HStackLayout(alignment: .top, spacing: 20))
             layout {
-                dayMetric(stats.alignedDays, title: "Alignées", color: accent.color)
-                dayMetric(stats.observedDays, title: "Bilans", color: QuitTheme.text)
+                dayMetric(stats.alignedDays, title: "Objectif respecté", color: accent.color)
+                dayMetric(stats.observedDays, title: "Bilans connus", color: QuitTheme.text)
                 dayMetric(stats.unknownDays, title: "Sans bilan", color: QuitTheme.secondary)
             }
             LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 5), count: 10), spacing: 6) {
@@ -87,12 +95,10 @@ struct InsightsView: View {
                 ? AnyLayout(VStackLayout(alignment: .leading, spacing: 8))
                 : AnyLayout(HStackLayout(spacing: 12))
             legendLayout {
-                legend("Aligné", color: accent.color, symbol: "checkmark")
-                legend("Épisode", color: QuitTheme.amber, symbol: "circle")
+                legend("Respecté", color: accent.color, symbol: "checkmark")
+                legend("Non atteint", color: QuitTheme.amber, symbol: "circle")
                 legend("Sans bilan", color: QuitTheme.border, symbol: nil)
             }.font(.caption)
-            Text("\(stats.episodeCount) épisodes détaillés · \(stats.episodeDays) jours avec écart ou objectif non atteint")
-                .font(.footnote).foregroundStyle(QuitTheme.secondary)
         }
     }
 
@@ -100,7 +106,7 @@ struct InsightsView: View {
         QuitCard {
             QuitSectionTitle(title: "Mes envies", symbol: "water.waves", tone: .reflection)
             Text("\(stats.passedUrges) envies traversées").font(.title2.weight(.medium))
-            Text("Sur \(stats.urges.count) \(stats.urges.count == 1 ? "session enregistrée" : "sessions enregistrées"). Les sessions encore en cours ne comptent pas comme traversées.")
+            Text("\(stats.urges.count) sessions enregistrées")
                 .font(.footnote).foregroundStyle(QuitTheme.secondary)
             Chart(Array(stats.urges.suffix(30))) { session in
                 LineMark(x: .value("Date", session.date), y: .value("Intensité", session.initial), series: .value("Mesure", "Avant"))
@@ -115,11 +121,12 @@ struct InsightsView: View {
             }
             .chartYScale(domain: 0...10)
             .chartForegroundStyleScale(["Avant": QuitTheme.amber, "Après": accent.color])
+            .chartYAxis { AxisMarks(values: [0, 5, 10]) }
             .chartXAxis { AxisMarks(values: .automatic(desiredCount: 3)) { AxisValueLabel(format: .dateTime.day().month()) } }
             .frame(height: 170)
             .accessibilityLabel("Intensité des 30 dernières envies, avant et après une action")
             if let reduction = stats.averageReduction {
-                Text("Variation moyenne : \((-reduction).formatted(.number.precision(.fractionLength(1)))) points après une action.")
+                Text("Évolution moyenne : \((-reduction).formatted(.number.precision(.fractionLength(1)))) points")
                     .font(.footnote).foregroundStyle(QuitTheme.secondary)
             }
         }
@@ -130,13 +137,11 @@ struct InsightsView: View {
             ForEach(stats.strategies) { result in
                 VStack(alignment: .leading, spacing: 5) {
                     Label(result.strategy.title, systemImage: result.strategy.symbol).font(.subheadline.weight(.medium))
-                    Text("\(result.count) observations · variation \((-result.reduction).formatted(.number.precision(.fractionLength(1)))) points")
+                    Text("\(result.count) essais · \((-result.reduction).formatted(.number.precision(.fractionLength(1)))) points en moyenne")
                         .font(.footnote).foregroundStyle(QuitTheme.secondary)
-                    if result.count < 3 { Text("Encore peu d'observations").font(.caption).foregroundStyle(QuitTheme.secondary) }
+                    if result.count < 3 { Label("Peu de données", systemImage: "info.circle").font(.caption).foregroundStyle(QuitTheme.secondary) }
                 }
             }
-            Text("Associations descriptives : elles ne prouvent pas qu'une action cause la baisse de l'envie.")
-                .font(.footnote).foregroundStyle(QuitTheme.secondary)
         }
     }
 
@@ -150,8 +155,6 @@ struct InsightsView: View {
                     Text("\(item.count) signaux").foregroundStyle(QuitTheme.secondary)
                 }.font(.subheadline)
             }
-            Text("Envies et épisodes enregistrés. Un même moment peut donner lieu à deux signaux.")
-                .font(.footnote).foregroundStyle(QuitTheme.secondary)
         }
     }
 
@@ -159,7 +162,7 @@ struct InsightsView: View {
         switch state { case .aligned: accent.color; case .episode: QuitTheme.amber; case .unknown: QuitTheme.border }
     }
     private func dayLabel(_ state: DayRecord.State) -> String {
-        switch state { case .aligned: "Aligné"; case .episode: "Écart ou objectif non atteint"; case .unknown: "Sans bilan" }
+        switch state { case .aligned: "Objectif respecté"; case .episode: "Écart ou objectif non atteint"; case .unknown: "Sans bilan" }
     }
     private func dayMetric(_ value: Int, title: String, color: Color) -> some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -186,10 +189,10 @@ struct HeatmapView: View {
     let cells: [HeatCell]
     private let weekdays = [2, 3, 4, 5, 6, 7, 1]
     private let labels = ["L", "M", "M", "J", "V", "S", "D"]
-    private let buckets = ["Matin", "Après-midi", "Soir", "Nuit"]
+    private let buckets = ["6–12 h", "12–18 h", "18–24 h", "0–6 h"]
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Mes moments sensibles").font(.headline)
+            Text("Envies et épisodes par moment").font(.headline)
             ScrollView(.horizontal) {
                 Grid(horizontalSpacing: 5, verticalSpacing: 8) {
                     GridRow {
@@ -215,8 +218,6 @@ struct HeatmapView: View {
                 }
                 .frame(minWidth: 260)
             }.accessibilityLabel("Signaux par jour et moment de la journée")
-            Text("Chaque nombre indique les signaux enregistrés ; un tiret indique aucune saisie. Matin 6–12 h, après-midi 12–18 h, soir 18–24 h, nuit 0–6 h. Ce n'est pas une prédiction de risque.")
-                .font(.footnote).foregroundStyle(QuitTheme.secondary)
         }
     }
 }

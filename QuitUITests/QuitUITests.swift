@@ -193,6 +193,53 @@ final class QuitUITests: XCTestCase {
         XCTAssertTrue(app.descendants(matching: .any)[episodeIdentifier].firstMatch.waitForExistence(timeout: 5))
     }
 
+    func testCheckInCalendarAndFocusedPathShareExistingProgress() {
+        let app = application()
+        app.launch()
+        if app.buttons["onboarding.next"].waitForExistence(timeout: 5) {
+            app.buttons["onboarding.next"].tap()
+            reveal(app.buttons["onboarding.next"], in: app)
+            app.buttons["onboarding.next"].tap()
+            reveal(app.buttons["onboarding.next"], in: app)
+            app.buttons["onboarding.next"].tap()
+        }
+        XCTAssertTrue(app.buttons["checkin.open"].waitForExistence(timeout: 5))
+        let day = app.staticTexts["today.journeyDay"]
+        XCTAssertTrue(day.exists)
+        XCTAssertEqual(day.frame.midX, app.frame.midX, accuracy: 4)
+        XCTAssertFalse(app.staticTexts["Un geste pour aujourd'hui"].exists)
+        app.buttons["today.intention"].tap()
+        XCTAssertTrue(app.staticTexts["Retrouver de la liberté dans mes choix."].exists)
+        app.buttons["today.intention"].tap()
+        app.buttons["checkin.help"].tap()
+        XCTAssertTrue(app.navigationBars["Le check-in"].waitForExistence(timeout: 5))
+        app.buttons["Terminé"].tap()
+        app.buttons["checkin.open"].tap()
+        app.buttons["checkin.save"].tap()
+        app.buttons["checkin.history"].tap()
+        XCTAssertTrue(app.descendants(matching: .any)["checkin.summary"].firstMatch.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Objectif : pas encore de réponse"].exists)
+        capture(app, name: "Check-ins-Calendrier-Incertain")
+        app.tabBars.buttons["Parcours"].tap()
+        app.buttons["journey.path.urges"].tap()
+        app.buttons["journey.continue"].tap()
+        reveal(app.buttons["lesson.save"], in: app)
+        app.buttons["lesson.save"].tap()
+        XCTAssertTrue(app.buttons["lesson.save"].waitForExistence(timeout: 5))
+        app.terminate()
+        app.launch()
+        app.tabBars.buttons["Parcours"].tap()
+        app.buttons["journey.path.urges"].tap()
+        XCTAssertTrue(app.staticTexts["1 / 7"].waitForExistence(timeout: 5))
+        capture(app, name: "Parcours-Cible-Progression")
+        app.navigationBars["Traverser une envie"].buttons["Parcours"].tap()
+        app.buttons["journey.path.foundations"].tap()
+        XCTAssertTrue(app.staticTexts["1 / 42"].waitForExistence(timeout: 5))
+        app.tabBars.buttons["Aujourd'hui"].tap()
+        app.buttons["checkin.history"].tap()
+        XCTAssertTrue(app.descendants(matching: .any)["checkin.summary"].firstMatch.waitForExistence(timeout: 5))
+    }
+
     private func choose(_ title: String, in identifier: String, app: XCUIApplication) {
         let picker = app.descendants(matching: .any)[identifier].firstMatch
         XCTAssertTrue(picker.waitForExistence(timeout: 5))

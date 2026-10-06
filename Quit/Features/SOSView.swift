@@ -77,9 +77,14 @@ struct SOSView: View {
             Text("Une envie n'est pas un ordre.").font(.title2.weight(.semibold))
             Text("On peut créer un peu d'espace avant le prochain geste.").foregroundStyle(QuitTheme.secondary)
             QuitCard { IntensitySlider(title: "Intensité de l'envie", value: $initial) }
-            Picker("Temps d'observation", selection: $duration) {
-                ForEach(ObservationDuration.allCases) { Text($0.title).tag($0) }
-            }.modifier(QuitAdaptivePickerStyle()).accessibilityIdentifier("sos.duration")
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Temps pour observer l'envie").font(.headline)
+                Picker("Temps d'observation", selection: $duration) {
+                    ForEach(ObservationDuration.allCases) { Text($0.title).tag($0) }
+                }.modifier(QuitAdaptivePickerStyle()).accessibilityIdentifier("sos.duration")
+                Text("C'est une durée de pause. Tu peux choisir une action avant la fin.")
+                    .font(.footnote).foregroundStyle(QuitTheme.secondary)
+            }
             Text("Juste avant, tu te sentais…").font(.headline)
             EmotionPicker(selection: $emotion)
         }

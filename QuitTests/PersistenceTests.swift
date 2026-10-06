@@ -45,6 +45,27 @@ final class PersistenceTests: XCTestCase {
         XCTAssertEqual(store.data.profile.intention, "Existing")
     }
 
+    func testDailyUpdateReconcilesImportedDuplicatesAndPreservesOtherDays() throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let vault = LocalVault(directory: directory)
+        let store = AppStore(vault: vault)
+        let today = Calendar.current.startOfDay(for: Date()).addingTimeInterval(-60)
+        let yesterday = Calendar.current.date(byAdding: .day, value: -1, to: today)!
+        let first = DailyCheckIn(date: today, emotion: .calm, energy: 2, stress: 1, urge: 2, aligned: true)
+        let latest = DailyCheckIn(date: today.addingTimeInterval(1), emotion: .tired, energy: 1, stress: 2, urge: 5, aligned: nil)
+        let old = DailyCheckIn(date: yesterday, emotion: .calm, energy: 3, stress: 1, urge: 1, aligned: true)
+        XCTAssertTrue(store.update { $0.checkIns = [first, old, latest] })
+        let edited = DailyCheckIn(date: today.addingTimeInterval(2), emotion: .stressed, energy: 2, stress: 3, urge: 6, aligned: false)
+        XCTAssertTrue(store.saveCheckIn(edited))
+        XCTAssertEqual(store.data.checkIns.count, 2)
+        let todayRecord = CheckInHistory(checkIns: store.data.checkIns).checkIn(on: edited.date)
+        XCTAssertEqual(todayRecord?.id, latest.id)
+        XCTAssertEqual(todayRecord?.urge, 6)
+        XCTAssertTrue(store.data.checkIns.contains { $0.id == old.id })
+        XCTAssertEqual(try vault.load()?.checkIns.count, 2)
+    }
+
     func testRelaunchPreservesEveryKindOfRecordAndPreferences() throws {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: directory) }

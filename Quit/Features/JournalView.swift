@@ -8,6 +8,10 @@ struct JournalView: View {
     @State private var filter: JournalFilter = .all
     @State private var visibleCount = 20
 
+    init(showCheckInsOnly: Bool = false) {
+        _filter = State(initialValue: showCheckInsOnly ? .checkIns : .all)
+    }
+
     private enum JournalFilter: String, CaseIterable, Identifiable {
         case all = "Tous"
         case episodes = "Épisodes"

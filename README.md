@@ -18,9 +18,15 @@ L'IPA est **non signé**, arm64, pour iOS 18 et versions suivantes. SideStore le
 
 ### Lisibilité et palette
 
-Les quatre onglets utilisent une navigation compacte, avec SOS accessible dans la barre supérieure. L'accueil donne la priorité au check-in ; Parcours regroupe les semaines et les exercices en listes et propose le prochain exercice inexploré. Comprendre garde les chiffres utiles au premier niveau et rend les analyses secondaires dépliables. Aide regroupe les liens par usage. Les cartes et espacements sont allégés dans les écrans secondaires aussi.
+Les quatre onglets utilisent une navigation compacte, avec SOS accessible dans la barre supérieure. L'accueil centre le jour et l'intention, donne la priorité au check-in et permet d'en consulter le calendrier. Parcours propose le programme complet et trois parcours ciblés, avec étapes et progression partagée. Comprendre garde les chiffres utiles au premier niveau et rend les analyses secondaires dépliables ; les explications de lecture sont accessibles par le bouton d'information. Aide regroupe les liens par usage. Les cartes et espacements sont allégés dans les écrans secondaires aussi.
 
 L'accent choisi reste celui des actions principales. Des touches de bleu pour les repères, de prune pour le soutien et d'ocre pour la préparation complètent des surfaces neutres, en clair et en sombre. Les graphiques associent couleurs, symboles et nombres. Les contrôles de contraste et les 21 tests Python passent ; compilation et recette visuelle iOS restent à faire sur Mac. Voir l'[audit par onglet](docs/LISIBILITE.md).
+
+### Accueil, calendrier et parcours ciblés
+
+La date redondante, la formule « à ton rythme » et le geste proposé à l'accueil sont retirés. Le check-in affiche une explication courte avant la première saisie, puis le bilan du jour ; un bouton d'information explique son rôle. Le calendrier mensuel est accessible depuis l'accueil et Comprendre, montre les jours enregistrés, ouvre leurs détails et conduit au journal filtré. Un check-in sans réponse certaine sur l'objectif reste visible dans le calendrier, sans être compté comme une journée réussie. Actualiser un jour conserve son identifiant et réconcilie d'éventuels doublons importés sur cette date, sans supprimer les autres jours.
+
+Les fondamentaux conservent les six semaines et les 42 exercices. Traverser une envie, Mon environnement et Après un écart proposent chacun sept étapes issues de ces mêmes contenus. Ils n'ajoutent pas de nouveaux exercices : les identifiants, les réflexions et la progression restent partagés et compatibles avec les sauvegardes existantes. Les durées du SOS restent des temps de pause facultatifs, désormais identifiés plus clairement. [Détails et propositions pour compléter l'accueil](docs/ACCUEIL_PARCOURS.md).
 
 Une analyse en trois étapes, pensée pour environ une minute, à son rythme : contexte et émotion, déclencheur et moment où interrompre la séquence, puis prochain geste. Une proposition locale **Si → Alors** peut être adaptée et ajoutée volontairement aux plans ; aucune règle n’est créée automatiquement. L’action reste conservée dans l’analyse même sans ajout de plan. Le retour au plan peut être renseigné à la fin ou depuis le journal.
 

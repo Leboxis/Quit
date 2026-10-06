@@ -3,10 +3,13 @@ import SwiftUI
 struct TodayView: View {
     @Environment(\.quitAccent) private var accent
     @Environment(AppStore.self) private var store
+    @Environment(\.quitReduceMotion) private var reduceMotion
     @State private var showCheckIn = false
     @State private var showEpisode = false
+    @State private var showIntention = false
+    @State private var showCheckInHelp = false
     private var todayCheckIn: DailyCheckIn? {
-        store.data.checkIns.first { Calendar.current.isDateInToday($0.date) }
+        CheckInHistory(checkIns: store.data.checkIns).checkIn(on: Date())
     }
     private var journeyDay: Int {
         max(1, (Calendar.current.dateComponents([.day], from: Calendar.current.startOfDay(for: store.data.profile.startedAt),
@@ -14,63 +17,66 @@ struct TodayView: View {
     }
 
     var body: some View {
+        let checkIn = todayCheckIn
         ScreenContent {
-            VStack(alignment: .leading, spacing: 8) {
-                Text(Date(), format: .dateTime.weekday(.wide).day().month(.wide))
-                    .font(.subheadline).foregroundStyle(QuitTheme.secondary)
-                Text("Jour \(journeyDay) · À ton rythme")
-                    .font(.caption.weight(.medium)).foregroundStyle(accent.color)
-                    .fixedSize(horizontal: false, vertical: true)
-                Text(store.data.profile.name.isEmpty ? "Un geste à la fois." : "Bonjour, \(store.data.profile.name).")
-                    .font(.title2.weight(.medium))
-                    .fixedSize(horizontal: false, vertical: true)
-                DisclosureGroup {
+            VStack(spacing: 8) {
+                Text("Jour \(journeyDay)")
+                    .font(.system(.title2, design: .rounded, weight: .medium)).foregroundStyle(accent.color)
+                    .accessibilityIdentifier("today.journeyDay")
+                Button { showIntention.toggle() } label: {
+                    HStack(spacing: 8) {
+                        Label("Ton intention", systemImage: "leaf")
+                        Image(systemName: showIntention ? "chevron.up" : "chevron.down")
+                            .font(.caption.weight(.semibold)).accessibilityHidden(true)
+                    }
+                    .font(.subheadline.weight(.medium))
+                    .frame(maxWidth: .infinity, minHeight: 44)
+                    .contentShape(Rectangle())
+                }.buttonStyle(.plain).foregroundStyle(accent.color)
+                    .accessibilityValue(showIntention ? "Dépliée" : "Repliée")
+                    .accessibilityHint("Afficher ou masquer ton intention personnelle")
+                    .accessibilityIdentifier("today.intention")
+                if showIntention {
                     Text(store.data.profile.intention.isEmpty ? "Retrouver de la liberté dans mes choix." : "« \(store.data.profile.intention) »")
-                        .font(.body).fixedSize(horizontal: false, vertical: true)
-                } label: {
-                    Label("Ton intention", systemImage: "leaf")
-                        .font(.subheadline.weight(.medium))
+                        .font(.body).multilineTextAlignment(.center)
                         .fixedSize(horizontal: false, vertical: true)
                 }
-            }
+            }.frame(maxWidth: .infinity)
+                .animation(reduceMotion ? nil : .easeInOut(duration: 0.18), value: showIntention)
             QuitCard(tinted: true) {
                 HStack {
-                    Text(todayCheckIn == nil ? "Comment tu te sens ?" : "Ton check-in du jour").font(.headline)
+                    Text("Mon check-in du jour").font(.headline)
                         .fixedSize(horizontal: false, vertical: true)
                     Spacer()
-                    if todayCheckIn != nil { Image(systemName: "checkmark.circle.fill").foregroundStyle(accent.color) }
+                    if checkIn != nil { Image(systemName: "checkmark.circle.fill").foregroundStyle(accent.color) }
+                    Button("À quoi sert le check-in ?", systemImage: "info.circle") { showCheckInHelp = true }
+                        .labelStyle(.iconOnly).frame(width: 44, height: 44)
+                        .accessibilityIdentifier("checkin.help")
                 }
-                if let checkIn = todayCheckIn {
-                    Text("\(checkIn.emotion.title) · Envie \(checkIn.urge)/10").foregroundStyle(QuitTheme.secondary)
+                if let checkIn {
+                    CheckInSummary(checkIn: checkIn)
                 } else {
-                    Text("10 secondes, juste pour toi.").foregroundStyle(QuitTheme.secondary)
+                    Text("Note ton humeur et ton envie pour suivre leur évolution.")
+                        .font(.subheadline).foregroundStyle(QuitTheme.secondary)
                 }
-                QuitPrimaryButton(title: todayCheckIn == nil ? "Faire mon check-in" : "Actualiser mon check-in") { showCheckIn = true }
+                QuitPrimaryButton(title: checkIn == nil ? "Faire mon check-in" : "Actualiser mon check-in") { showCheckIn = true }
                     .fixedSize(horizontal: false, vertical: true)
                     .accessibilityIdentifier("checkin.open")
-            }
-            QuitCard {
-                QuitSectionTitle(title: "Un geste pour aujourd'hui", symbol: "arrow.triangle.branch", tone: .preparation)
-                if let plan = store.data.plans.last {
-                    Text("Si \(plan.condition.lowercased())…").foregroundStyle(QuitTheme.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                    Text(plan.action).font(.body.weight(.medium))
-                        .fixedSize(horizontal: false, vertical: true)
-                } else {
-                    Text("Pose ton téléphone hors de la chambre ce soir.").font(.body.weight(.medium))
-                }
-                NavigationLink { PlansView() } label: {
-                    Label("Préparer mes plans", systemImage: "arrow.right").font(.subheadline.weight(.medium))
-                        .fixedSize(horizontal: false, vertical: true).frame(minHeight: 44)
-                }
+                NavigationLink { CheckInCalendarView() } label: {
+                    Label("Retrouver mes check-ins", systemImage: "calendar")
+                        .font(.subheadline.weight(.medium)).frame(minHeight: 44)
+                }.accessibilityIdentifier("checkin.history")
             }
             Button { showEpisode = true } label: {
-                Label("J'ai eu un écart", systemImage: "arrow.uturn.forward").font(.subheadline)
-                    .fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, minHeight: 44)
+                VStack(spacing: 4) {
+                    Label("J'ai eu un écart", systemImage: "arrow.uturn.forward").font(.subheadline.weight(.medium))
+                    Text("Comprendre ce qui s'est passé").font(.caption)
+                }.fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, minHeight: 44)
             }.foregroundStyle(QuitTheme.secondary).accessibilityIdentifier("episode.open")
         }
         .navigationTitle("Aujourd'hui")
-        .sheet(isPresented: $showCheckIn) { CheckInView(existing: todayCheckIn) }
+        .sheet(isPresented: $showCheckIn) { CheckInView(existing: checkIn) }
         .sheet(isPresented: $showEpisode) { EpisodeView() }
+        .sheet(isPresented: $showCheckInHelp) { CheckInHelpView() }
     }
 }

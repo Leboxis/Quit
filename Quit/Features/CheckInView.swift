@@ -64,3 +64,28 @@ struct CheckInView: View {
         }
     }
 }
+
+struct CheckInHelpView: View {
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            ScreenContent {
+                QuitCard {
+                    QuitSectionTitle(title: "Un bilan de ta journée", symbol: "checkmark.circle")
+                    Text("Ton check-in conserve ton humeur, ton énergie, ton stress et l'intensité de ton envie. Il te permet de retrouver ce que tu ressentais et de suivre ton évolution.")
+                    Text("La question sur ton objectif sert au bilan des journées dans Comprendre. Tu peux laisser cette réponse incertaine et la modifier plus tard.")
+                }
+                QuitCard {
+                    QuitSectionTitle(title: "Un check-in par jour", symbol: "calendar", tone: .reflection)
+                    Text("Actualiser le check-in du jour remplace son contenu, sans créer un doublon. Le calendrier et le journal conservent les bilans des autres jours.")
+                    NavigationLink { CheckInCalendarView() } label: {
+                        QuietRow(title: "Voir mes check-ins", symbol: "calendar", tone: .reflection)
+                    }.buttonStyle(.plain)
+                }
+            }
+            .navigationTitle("Le check-in").navigationBarTitleDisplayMode(.inline)
+            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Terminé") { dismiss() } } }
+        }
+    }
+}
