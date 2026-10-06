@@ -44,22 +44,42 @@ jobs:
       - name: Start available iPhone Simulator
         id: simulator
         run: python3 scripts/select_simulator.py
+      - name: Restore the simulator build
+        uses: actions/cache@v4
+        with:
+          path: build/Simulator
+          key: simulator-${{ runner.os }}-${{ hashFiles('project.yml', 'Quit/**') }}
+          restore-keys: |
+            simulator-${{ runner.os }}-
+      - name: Build the app and its tests for the simulator
+        env:
+          SIMULATOR_ID: ${{ steps.simulator.outputs.udid }}
+        run: |
+          set -o pipefail
+          # The simulator boots in the background while this compiles, hiding its boot wait.
+          # COMPILER_INDEX_STORE_ENABLE=NO drops the index store, which only serves code completion.
+          xcodebuild build-for-testing -project Quit.xcodeproj -scheme Quit -configuration Debug \
+            -destination "platform=iOS Simulator,id=$SIMULATOR_ID" \
+            -derivedDataPath build/Simulator CODE_SIGNING_ALLOWED=NO COMPILER_INDEX_STORE_ENABLE=NO \
+            2>&1 | tee build-tests.log
       - name: Run XCTest and core user flow
         env:
           SIMULATOR_ID: ${{ steps.simulator.outputs.udid }}
         run: |
           set -o pipefail
+          xcrun simctl bootstatus "$SIMULATOR_ID" -b
           run_tests() {
-            xcodebuild test -project Quit.xcodeproj -scheme Quit -configuration Debug \
+            xcodebuild test-without-building -project Quit.xcodeproj -scheme Quit -configuration Debug \
               -destination "platform=iOS Simulator,id=$SIMULATOR_ID" \
               -derivedDataPath build/Simulator -resultBundlePath build/TestResults.xcresult \
-              -parallel-testing-enabled NO CODE_SIGNING_ALLOWED=NO 2>&1 | tee build-tests.log
+              -parallel-testing-enabled NO CODE_SIGNING_ALLOWED=NO 2>&1 | tee -a build-tests.log
           }
           if run_tests; then
             exit 0
           fi
           # GitHub runners intermittently time out loading the simulator Accessibility service,
-          # which aborts the UI test target before a single test runs. Only that flake is retried.
+          # which aborts the UI test target before a single test runs. Only that flake is retried,
+          # and the retry reuses the bundle compiled above instead of rebuilding it.
           if ! grep -q 'Timed out while loading Accessibility' build-tests.log; then
             echo '::error::XCTest failed for a reason other than the simulator accessibility flake.'
             exit 1
@@ -79,6 +99,7 @@ jobs:
             -sdk iphoneos -destination 'generic/platform=iOS' -derivedDataPath build/Device \
             ARCHS=arm64 ONLY_ACTIVE_ARCH=NO CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY='' MARKETING_VERSION="$QUIT_VERSION" CURRENT_PROJECT_VERSION="$GITHUB_RUN_NUMBER" \
+            COMPILER_INDEX_STORE_ENABLE=NO \
             2>&1 | tee build-device.log
       - name: Verify and package unsigned IPA
         run: |

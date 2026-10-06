@@ -16,7 +16,9 @@ if not candidates:
 _, udid = max(candidates)
 print(f'Simulator: {udid}')
 subprocess.run(['xcrun', 'simctl', 'boot', udid], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-subprocess.run(['xcrun', 'simctl', 'bootstatus', udid, '-b'], check=True)
+# The boot is only started here, never awaited: the caller compiles while the simulator comes
+# up and blocks on `simctl bootstatus` right before running tests. Waiting here would serialise
+# roughly three minutes that the build can absorb.
 if os.environ.get('GITHUB_OUTPUT'):
     with open(os.environ['GITHUB_OUTPUT'], 'a') as file:
         file.write(f'udid={udid}\n')
