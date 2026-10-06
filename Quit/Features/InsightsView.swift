@@ -16,6 +16,19 @@ struct InsightsView: View {
                                        description: Text("Enregistre ton premier check-in pour voir ton suivi."))
             } else {
                 dayOverview(stats)
+                if stats.insufficientData {
+                    QuitCard(tinted: true) {
+                        Text("Tes repères demandent un peu plus de données.").font(.headline)
+                        Text("Enregistre tes check-ins, tes envies SOS et tes épisodes. Les analyses ci-dessous s'affineront sans prédire quoi que ce soit.")
+                            .font(.subheadline).foregroundStyle(QuitTheme.secondary)
+                    }
+                }
+                if !stats.topSensitive.isEmpty {
+                    sensitiveOverview(stats)
+                }
+                if !stats.triggers.isEmpty {
+                    triggerOverview(stats)
+                }
                 if !stats.urges.isEmpty {
                     urgeOverview(stats)
                 }
@@ -43,10 +56,13 @@ struct InsightsView: View {
             }
             QuitCard {
                 QuitSectionTitle(title: "Mon historique", symbol: "book.closed", tone: .reflection)
-                if let hours = stats.averageRecoveryHours {
+                if let hours = stats.averageRecoveryHours, let median = stats.medianRecoveryHours {
                     Text("\(hours.formatted(.number.precision(.fractionLength(1)))) h en moyenne")
                         .font(.title2.weight(.medium))
-                    Text("Retour au plan · \(stats.episodes.filter { $0.recoveredAt != nil }.count) retours")
+                    Text("Retour au plan · \(stats.recoveryCount) retours · médiane \(median.formatted(.number.precision(.fractionLength(1)))) h")
+                        .font(.footnote).foregroundStyle(QuitTheme.secondary)
+                } else {
+                    Text("Note ton retour au plan après un épisode pour voir ton temps de reprise.")
                         .font(.footnote).foregroundStyle(QuitTheme.secondary)
                 }
                 NavigationLink { CheckInCalendarView() } label: {
@@ -143,6 +159,46 @@ struct InsightsView: View {
                 }
             }
         }
+    }
+
+    private func sensitiveOverview(_ stats: ProgressSnapshot) -> some View {
+        QuitCard {
+            QuitSectionTitle(title: "Moments sensibles", symbol: "clock", tone: .reflection)
+            Text("Où tes envies reviennent le plus. Une association, pas une prédiction.")
+                .font(.footnote).foregroundStyle(QuitTheme.secondary)
+            ForEach(stats.topSensitive) { cell in
+                HStack {
+                    Text("\(weekdayName(cell.weekday)) · \(bucketName(cell.bucket))")
+                    Spacer()
+                    Text("\(cell.count) signaux").foregroundStyle(QuitTheme.secondary)
+                }.font(.subheadline)
+            }
+        }
+    }
+
+    private func triggerOverview(_ stats: ProgressSnapshot) -> some View {
+        QuitCard {
+            QuitSectionTitle(title: "Déclencheurs fréquents", symbol: "bolt", tone: .reflection)
+            ForEach(stats.triggers.prefix(4), id: \.trigger) { item in
+                HStack {
+                    Text(item.trigger.title)
+                    Spacer()
+                    Text("\(item.count) signaux").foregroundStyle(QuitTheme.secondary)
+                }.font(.subheadline)
+            }
+            if stats.triggers.count < 3 {
+                Label("Peu de données — chaque épisode noté affine ce repère.", systemImage: "info.circle")
+                    .font(.caption).foregroundStyle(QuitTheme.secondary)
+            }
+        }
+    }
+
+    private func weekdayName(_ weekday: Int) -> String {
+        Calendar.current.weekdaySymbols[weekday - 1].capitalized
+    }
+
+    private func bucketName(_ bucket: Int) -> String {
+        ["6–12 h", "12–18 h", "18–24 h", "0–6 h"][bucket]
     }
 
     private func emotionOverview(_ stats: ProgressSnapshot) -> some View {

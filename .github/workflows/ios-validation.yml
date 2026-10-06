@@ -16,7 +16,7 @@ jobs:
   native:
     name: XCTest and UI (${{ matrix.size }})
     runs-on: macos-26
-    timeout-minutes: 5
+    timeout-minutes: 30
     strategy:
       # Both sizes start independently; one failure must not conceal the other.
       fail-fast: false

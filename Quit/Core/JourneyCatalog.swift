@@ -38,4 +38,26 @@ enum JourneyCatalog {
                     overview: "Comprendre un épisode, reprendre ton plan et conserver ce que tu as appris.",
                     symbol: "arrow.uturn.forward", lessonIDs: Array(36...42))
     ]
+
+    /// Transparent local rule, no prediction. Returns path + human-readable reason.
+    static func recommendation(for data: QuitData) -> (path: JourneyPath, reason: String) {
+        let snapshot = ProgressSnapshot(data: data)
+        let byID = Dictionary(uniqueKeysWithValues: paths.map { ($0.id, $0) })
+        func incomplete(_ id: String) -> Bool {
+            guard let path = byID[id] else { return false }
+            return path.completedCount(in: data.completedLessons) < path.lessonIDs.count
+        }
+        if !snapshot.episodes.isEmpty && incomplete("recovery") {
+            return (byID["recovery"]!, "Un épisode récent — reprendre doucement sans tout recommencer.")
+        }
+        if let top = snapshot.triggers.first,
+           [.scrolling, .suggestive, .boredom].contains(top.trigger) && incomplete("urges") {
+            return (byID["urges"]!, "Tes déclencheurs reviennent souvent au même moment.")
+        }
+        let bedCount = snapshot.episodes.filter { $0.context == .bed }.count
+        if bedCount >= 1 && incomplete("environment") {
+            return (byID["environment"]!, "Préparer le lieu et le téléphone rend le prochain choix plus facile.")
+        }
+        return (byID["foundations"]!, "Continuer le parcours complet à ton rythme.")
+    }
 }

@@ -95,7 +95,7 @@ def make_source(ipa, repository, tag, release_date, previous=None):
     download = f'https://github.com/{repository}/releases/download/{tag}/Quit.ipa'
     icon = f'https://raw.githubusercontent.com/{repository}/main/docs/design/icon.png'
     current = {'version': version, 'buildVersion': info['CFBundleVersion'], 'date': release_date,
-               'localizedDescription': 'Quit V2 : trois ambiances, apparence claire/sombre, confort visuel et SOS à durée choisie. Journal, parcours et progrès privés conservés.',
+               'localizedDescription': 'Quit V4-V6 : SOS personnalisé avec tes gestes utiles, habitudes concrètes dans Comprendre, et parcours recommandé selon tes difficultés. Journal, check-ins, plans Si → Alors et 42 exercices conservés.',
                'downloadURL': download, 'size': ipa.stat().st_size, 'minOSVersion': info['MinimumOSVersion']}
     history = []
     if previous:

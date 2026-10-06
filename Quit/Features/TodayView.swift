@@ -8,6 +8,7 @@ struct TodayView: View {
     @State private var showEpisode = false
     @State private var showIntention = false
     @State private var showCheckInHelp = false
+    @State private var showSOS = false
     private var todayCheckIn: DailyCheckIn? {
         CheckInHistory(checkIns: store.data.checkIns).checkIn(on: Date())
     }
@@ -73,10 +74,16 @@ struct TodayView: View {
                     Text("Comprendre ce qui s'est passé").font(.caption)
                 }.fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, minHeight: 44)
             }.foregroundStyle(QuitTheme.secondary).accessibilityIdentifier("episode.open")
+            QuitCard(tinted: true, tone: .reflection) {
+                Button { showSOS = true } label: {
+                    QuietRow(title: "Une envie maintenant ?", detail: "Ouvrir SOS pour créer une pause", symbol: "water.waves", tone: .reflection)
+                }.buttonStyle(.plain).accessibilityIdentifier("today.sos")
+            }
         }
         .navigationTitle("Aujourd'hui")
         .sheet(isPresented: $showCheckIn) { CheckInView(existing: checkIn) }
         .sheet(isPresented: $showEpisode) { EpisodeView() }
+        .fullScreenCover(isPresented: $showSOS) { SOSView() }
         .sheet(isPresented: $showCheckInHelp) { CheckInHelpView() }
     }
 }

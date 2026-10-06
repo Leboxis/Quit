@@ -5,6 +5,38 @@ struct JourneyView: View {
 
     var body: some View {
         ScreenContent {
+            let reco = JourneyCatalog.recommendation(for: store.data)
+            let completed = store.data.completedLessons.count
+            if completed >= 42 {
+                QuitCard(tinted: true) {
+                    Label("Parcours terminé — mode entretien", systemImage: "checkmark.circle").font(.headline)
+                    Text("Revois les étapes utiles à ton rythme. Le SOS reste disponible.")
+                        .font(.subheadline).foregroundStyle(QuitTheme.secondary)
+                    NavigationLink { JourneyPathView(path: reco.path) } label: {
+                        QuietRow(title: "Reprendre en douceur", detail: reco.path.title, symbol: "play.fill")
+                    }.buttonStyle(.plain).accessibilityIdentifier("journey.resume-gentle")
+                }
+            }
+            NavigationLink { JourneyPathView(path: reco.path) } label: {
+                QuitCard(tinted: true) {
+                    QuietRow(title: "Pour toi : \(reco.path.title)", detail: reco.reason, symbol: "sparkles",
+                             tone: reco.path.id == "urges" ? .reflection : .preparation)
+                }
+            }.buttonStyle(.plain).accessibilityIdentifier("journey.recommended")
+            QuitCard {
+                Picker("Rythme", selection: Binding(get: { store.data.pace }, set: { value in
+                    _ = store.update { $0.pace = value }
+                })) {
+                    ForEach(Pace.allCases, id: \.self) { Text($0.title).tag($0) }
+                }.pickerStyle(.segmented).accessibilityIdentifier("journey.pace")
+                Text("Ton rythme guide la suite sans punir les pauses.")
+                    .font(.caption).foregroundStyle(QuitTheme.secondary)
+            }
+            NavigationLink { WeeklyReviewView() } label: {
+                QuitCard {
+                    QuietRow(title: "Bilan hebdo", detail: store.data.weeklyReviews.isEmpty ? "3 questions, 2 minutes" : "\(store.data.weeklyReviews.count) bilans", symbol: "calendar.badge.clock")
+                }
+            }.buttonStyle(.plain).accessibilityIdentifier("journey.weekly")
             ForEach(JourneyCatalog.paths) { path in
                 NavigationLink { JourneyPathView(path: path) } label: {
                     QuitCard {
@@ -157,5 +189,42 @@ struct LessonView: View {
         }
         .navigationTitle(stepTitle ?? "Exercice \(lesson.id)").navigationBarTitleDisplayMode(.inline)
         .onAppear { reflection = store.data.reflections[String(lesson.id)] ?? "" }
+    }
+}
+
+struct WeeklyReviewView: View {
+    @Environment(AppStore.self) private var store
+    @Environment(\.dismiss) private var dismiss
+    @State private var text = ""
+    var body: some View {
+        NavigationStack {
+            ScreenContent {
+                Text("2 minutes, 3 questions : qu'est-ce qui a aidé, qu'est-ce qui a été difficile, un petit geste pour la semaine prochaine ?")
+                    .font(.subheadline).foregroundStyle(QuitTheme.secondary)
+                QuitCard {
+                    TextField("Mon bilan (facultatif)", text: $text, axis: .vertical).lineLimit(4...10)
+                        .onChange(of: text) { _, value in text = String(value.prefix(2000)) }
+                        .accessibilityIdentifier("weekly.text")
+                }
+                QuitPrimaryButton(title: "Garder ce bilan") {
+                    let start = Calendar.current.startOfDay(for: Date())
+                    if store.update({ $0.weeklyReviews.append(WeeklyReview(weekStart: start, text: text.trimmingCharacters(in: .whitespacesAndNewlines))) }) { dismiss() }
+                }.disabled(text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                .accessibilityIdentifier("weekly.save")
+                if !store.data.weeklyReviews.isEmpty {
+                    QuitCard {
+                        Text("Bilans précédents").font(.headline)
+                        ForEach(store.data.weeklyReviews.suffix(5).reversed()) { review in
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(review.weekStart.formatted(date: .abbreviated, time: .omitted))
+                                    .font(.caption).foregroundStyle(QuitTheme.secondary)
+                                Text(review.text).font(.subheadline)
+                            }.padding(.vertical, 4)
+                        }
+                    }
+                }
+            }.navigationTitle("Bilan hebdo").navigationBarTitleDisplayMode(.inline)
+                .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Fermer") { dismiss() } } }
+        }
     }
 }

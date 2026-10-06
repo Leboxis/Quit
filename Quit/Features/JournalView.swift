@@ -143,10 +143,13 @@ struct JournalView: View {
                         .fixedSize(horizontal: false, vertical: true)
                         .frame(maxWidth: .infinity, alignment: .leading)
                     } label: {
+                        // Identify the disclosure label only: an identifier set on the whole
+                        // DisclosureGroup is inherited by its content and would hide the
+                        // journal.edit/journal.resume identifiers of the row's buttons.
                         QuitSectionTitle(title: "Épisode · \(episode.emotion.title)", symbol: "arrow.uturn.forward", tone: .preparation)
+                            .accessibilityIdentifier("journal.episode.\(episode.id.uuidString)")
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .accessibilityIdentifier("journal.episode.\(episode.id.uuidString)")
                     Menu {
                         Button("Supprimer cet épisode", role: .destructive) { deleteID = episode.id }
                     } label: {

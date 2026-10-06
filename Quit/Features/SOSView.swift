@@ -20,6 +20,7 @@ struct SOSView: View {
     @State private var showEpisode = false
     @State private var savedEpisodeID: UUID?
     @State private var sessionDate = Date()
+    @State private var showPlanEditor = false
 
     var body: some View {
         NavigationStack {
@@ -56,6 +57,7 @@ struct SOSView: View {
                 Button("Continuer", role: .cancel) { }
             } message: { Text("Tu peux revenir quand tu veux. Aucun résultat ne sera déduit de cette session.") }
             .sheet(isPresented: $showEpisode) { EpisodeView(existingID: savedEpisodeID) }
+            .sheet(isPresented: $showPlanEditor) { SOSPlanEditorView() }
         }
         .onAppear { if step == .intensity { duration = store.data.experience.observationDuration } }
         .onChange(of: scenePhase) { _, phase in
@@ -126,17 +128,34 @@ struct SOSView: View {
         VStack(alignment: .leading, spacing: 18) {
             Text("Un prochain geste possible.").font(.title2.weight(.semibold))
             Text("Choisis une action. Tu peux sortir de l'app, puis revenir pour faire le point.").foregroundStyle(QuitTheme.secondary)
+            if let plan = store.data.sosPlan, !plan.strategies.isEmpty {
+                QuitCard(tinted: true, tone: .reflection) {
+                    Text("Ton plan SOS · \(plan.duration.title)").font(.headline)
+                    Text(plan.strategies.map(\.title).joined(separator: " · "))
+                        .font(.subheadline).foregroundStyle(QuitTheme.secondary)
+                }
+            }
+            Button("Personnaliser mon SOS") { showPlanEditor = true }.frame(minHeight: 44)
             ForEach(store.suggestions(for: emotion)) { item in
-                Button { strategy = item } label: {
-                    QuitCard(tinted: strategy == item) {
+                QuitCard(tinted: strategy == item) {
+                    Button { strategy = item } label: {
                         HStack {
                             Label(item.title, systemImage: item.symbol).font(.headline)
                             Spacer()
                             if strategy == item { Image(systemName: "checkmark.circle.fill") }
                         }
                         Text(item.instruction).font(.subheadline).foregroundStyle(QuitTheme.secondary)
+                    }.buttonStyle(.plain).accessibilityAddTraits(strategy == item ? [.isSelected] : [])
+                    HStack {
+                        if store.data.favoriteStrategies.contains(item) {
+                            Image(systemName: "star.fill").foregroundStyle(QuitTheme.amber)
+                        }
+                        Spacer()
+                        Button(store.data.favoriteStrategies.contains(item) ? "Retirer des favoris" : "Ajouter aux favoris") {
+                            store.toggleFavorite(item)
+                        }.font(.footnote).frame(minHeight: 44)
                     }
-                }.buttonStyle(.plain).accessibilityAddTraits(strategy == item ? [.isSelected] : [])
+                }
             }
         }
     }
@@ -170,6 +189,11 @@ struct SOSView: View {
             }
             Text(outcome == .passed ? "Tu viens de traverser une envie sans agir dessus. Garde en tête le geste qui t'a aidé." : "Cette expérience compte aussi. Tu peux essayer un autre geste ou demander du soutien.")
                 .foregroundStyle(QuitTheme.secondary)
+            if !store.data.usefulStrategies.contains(strategy) {
+                Button("Ce geste m'a aidé") { store.markUseful(strategy) }.frame(minHeight: 44)
+            } else {
+                Label("Geste marqué comme utile", systemImage: "star.fill").font(.footnote).foregroundStyle(QuitTheme.secondary)
+            }
             if outcome == .acted {
                 QuitPrimaryButton(title: "Comprendre cet épisode") { showEpisode = true }
             } else if outcome == .ongoing {
@@ -270,5 +294,47 @@ private struct ObservationDial: View {
         }
         .fixedSize(horizontal: false, vertical: true)
         .foregroundStyle(accent.color)
+    }
+}
+
+struct SOSPlanEditorView: View {
+    @Environment(AppStore.self) private var store
+    @Environment(\.dismiss) private var dismiss
+    @State private var duration: ObservationDuration = .ninetySeconds
+    @State private var selected: Set<Strategy> = []
+    var body: some View {
+        NavigationStack {
+            ScreenContent {
+                Text("Ton plan SOS sera proposé en premier.").font(.subheadline).foregroundStyle(QuitTheme.secondary)
+                Picker("Durée", selection: $duration) {
+                    ForEach(ObservationDuration.allCases) { Text($0.title).tag($0) }
+                }.modifier(QuitAdaptivePickerStyle())
+                ForEach(Strategy.allCases) { item in
+                    Button {
+                        if selected.contains(item) { selected.remove(item) }
+                        else if selected.count < 3 { selected.insert(item) }
+                    } label: {
+                        HStack {
+                            Label(item.title, systemImage: item.symbol)
+                            Spacer()
+                            if selected.contains(item) { Image(systemName: "checkmark.circle.fill") }
+                        }.padding(12).frame(minHeight: 44)
+                    }.buttonStyle(.plain)
+                }
+                QuitPrimaryButton(title: "Garder mon plan SOS") {
+                    if store.update({ $0.sosPlan = SOSPersonalPlan(duration: duration, strategies: Array(selected)) }) { dismiss() }
+                }.disabled(selected.isEmpty || selected.count > 3)
+                if store.data.sosPlan != nil {
+                    Button("Retirer mon plan SOS", role: .destructive) {
+                        if store.update({ $0.sosPlan = nil }) { dismiss() }
+                    }.frame(minHeight: 44)
+                }
+            }.navigationTitle("Mon plan SOS").navigationBarTitleDisplayMode(.inline)
+                .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Fermer") { dismiss() } } }
+                .onAppear {
+                    duration = store.data.sosPlan?.duration ?? store.data.experience.observationDuration
+                    selected = Set(store.data.sosPlan?.strategies ?? [])
+                }
+        }
     }
 }

@@ -41,4 +41,22 @@ final class JourneyCatalogTests: XCTestCase {
             XCTAssertEqual(path.completedCount(in: Set(path.lessonIDs)), path.lessonIDs.count)
         }
     }
+
+    func testRecommendationPrefersRecoveryAfterEpisode() {
+        var data = QuitData()
+        data.profile.startedAt = Date().addingTimeInterval(-86400 * 5)
+        data.episodes = [Episode(date: Date(), emotion: .tired, context: .desk, trigger: .habit)]
+        XCTAssertEqual(JourneyCatalog.recommendation(for: data).path.id, "recovery")
+    }
+
+    func testRecommendationSuggestsUrgesForScrollingTrigger() {
+        var data = QuitData()
+        data.profile.startedAt = Date().addingTimeInterval(-86400 * 5)
+        data.episodes = []
+        // Simulate scrolling-heavy history via episodes with scrolling trigger but no recovery needed?
+        // Use urges-independent path: empty episodes falls to foundations, so add scrolling episode then complete recovery.
+        data.episodes = [Episode(date: Date(), emotion: .bored, context: .desk, trigger: .scrolling)]
+        data.completedLessons = Set(36...42)
+        XCTAssertEqual(JourneyCatalog.recommendation(for: data).path.id, "urges")
+    }
 }

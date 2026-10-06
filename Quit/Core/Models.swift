@@ -103,6 +103,28 @@ enum UrgeOutcome: String, Codable, CaseIterable, Identifiable {
     }
 }
 
+enum Pace: String, Codable, CaseIterable {
+    case free, daily, weekly
+    var title: String {
+        switch self {
+        case .free: "À mon rythme"
+        case .daily: "Une étape par jour"
+        case .weekly: "Une étape par semaine"
+        }
+    }
+}
+
+struct SOSPersonalPlan: Codable, Equatable {
+    var duration: ObservationDuration = .ninetySeconds
+    var strategies: [Strategy] = []
+}
+
+struct WeeklyReview: Codable, Identifiable, Equatable {
+    var id = UUID()
+    var weekStart: Date
+    var text: String
+}
+
 struct UserProfile: Codable {
     var startedAt = Date()
     var name = ""
@@ -167,10 +189,17 @@ struct QuitData: Codable {
     var completedLessons: Set<Int> = []
     var reflections: [String: String] = [:]
     var experience = ExperiencePreferences()
+    // V4/V5/V6 additive fields — all optional for V1/V2/V3 backups.
+    var favoriteStrategies: [Strategy] = []
+    var usefulStrategies: [Strategy] = []
+    var sosPlan: SOSPersonalPlan?
+    var pace: Pace = .free
+    var weeklyReviews: [WeeklyReview] = []
 
     init() { }
     private enum CodingKeys: String, CodingKey {
         case schemaVersion, profile, checkIns, urges, episodes, plans, completedLessons, reflections, experience
+        case favoriteStrategies, usefulStrategies, sosPlan, pace, weeklyReviews
     }
     init(from decoder: Decoder) throws {
         let values = try decoder.container(keyedBy: CodingKeys.self)
@@ -184,6 +213,12 @@ struct QuitData: Codable {
         reflections = try values.decode([String: String].self, forKey: .reflections)
         // Additive V2 preferences: every V1 record and identifier remains intact.
         experience = try values.decodeIfPresent(ExperiencePreferences.self, forKey: .experience) ?? ExperiencePreferences()
+        // Additive V4/V5/V6: missing in V1/V2/V3 backups.
+        favoriteStrategies = try values.decodeIfPresent([Strategy].self, forKey: .favoriteStrategies) ?? []
+        usefulStrategies = try values.decodeIfPresent([Strategy].self, forKey: .usefulStrategies) ?? []
+        sosPlan = try values.decodeIfPresent(SOSPersonalPlan.self, forKey: .sosPlan)
+        pace = try values.decodeIfPresent(Pace.self, forKey: .pace) ?? .free
+        weeklyReviews = try values.decodeIfPresent([WeeklyReview].self, forKey: .weeklyReviews) ?? []
     }
 
     func validate() throws {
@@ -197,17 +232,28 @@ struct QuitData: Codable {
               completedLessons.allSatisfy({ (1...42).contains($0) }),
               reflections.count <= 42, reflections.values.allSatisfy({ $0.count <= 5000 }),
               reflections.keys.allSatisfy({ Int($0).map { (1...42).contains($0) } ?? false }),
-              checkIns.count <= 50000, urges.count <= 50000, episodes.count <= 50000, plans.count <= 100
+              checkIns.count <= 50000, urges.count <= 50000, episodes.count <= 50000, plans.count <= 100,
+              favoriteStrategies.count <= 3, usefulStrategies.count <= 4,
+              weeklyReviews.count <= 520
         else { throw DataError.invalidData }
         guard Set(checkIns.map(\.id)).count == checkIns.count,
               Set(urges.map(\.id)).count == urges.count,
               Set(episodes.map(\.id)).count == episodes.count,
-              Set(plans.map(\.id)).count == plans.count else { throw DataError.invalidData }
+              Set(plans.map(\.id)).count == plans.count,
+              Set(favoriteStrategies.map(\.rawValue)).count == favoriteStrategies.count,
+              Set(usefulStrategies.map(\.rawValue)).count == usefulStrategies.count,
+              Set(weeklyReviews.map(\.id)).count == weeklyReviews.count else { throw DataError.invalidData }
         guard checkIns.allSatisfy({ (0...10).contains($0.urge) && (1...3).contains($0.energy) && (1...3).contains($0.stress) && $0.date <= maximumDate }),
               urges.allSatisfy({ (0...10).contains($0.initial) && (0...10).contains($0.final) && $0.date <= maximumDate }),
               episodes.allSatisfy({ $0.date <= maximumDate && $0.interruption.count <= 2000 && ($0.nextAction?.count ?? 0) <= 500 }),
-              plans.allSatisfy({ !$0.condition.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !$0.action.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && $0.condition.count <= 500 && $0.action.count <= 500 })
+              plans.allSatisfy({ !$0.condition.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !$0.action.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && $0.condition.count <= 500 && $0.action.count <= 500 }),
+              weeklyReviews.allSatisfy({ $0.text.count <= 2000 && $0.weekStart <= maximumDate })
         else { throw DataError.invalidData }
+        if let plan = sosPlan {
+            guard (1...3).contains(plan.strategies.count),
+                  Set(plan.strategies.map(\.rawValue)).count == plan.strategies.count
+            else { throw DataError.invalidData }
+        }
         for episode in episodes {
             if let recovery = episode.recoveredAt, recovery < episode.date || recovery > maximumDate {
                 throw DataError.invalidData
