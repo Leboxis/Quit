@@ -93,6 +93,15 @@ jobs:
             xcrun xcresulttool get test-results summary --path build/TestResults.xcresult > build/TestSummary.json
             xcrun xcresulttool export attachments --path build/TestResults.xcresult --output-path build/Screenshots
           fi
+      - name: Preserve lightweight native screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: quit-screenshots-${{ github.run_number }}
+          path: |
+            build/Screenshots
+            build/TestSummary.json
+          if-no-files-found: ignore
       - name: Preserve test evidence and compiler logs
         if: always()
         uses: actions/upload-artifact@v4

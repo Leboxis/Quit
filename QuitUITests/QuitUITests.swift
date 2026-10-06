@@ -43,7 +43,7 @@ final class QuitUITests: XCTestCase {
         XCTAssertEqual(app.switches["comfort.haptics"].value as? String, "0")
         reveal(app.segmentedControls["comfort.duration"], in: app)
         XCTAssertTrue(app.segmentedControls["comfort.duration"].buttons["3 min"].isSelected)
-        app.navigationBars.buttons["Réglages"].tap()
+        app.navigationBars["Apparence et confort"].buttons["Réglages"].tap()
         app.buttons["settings.done"].tap()
         capture(app, name: "V2-Aujourd-hui-Brume-Sombre")
         app.buttons["checkin.open"].tap()
