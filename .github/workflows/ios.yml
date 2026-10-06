@@ -99,7 +99,8 @@ jobs:
         with:
           name: quit-screenshots-${{ github.run_number }}
           path: |
-            build/Screenshots
+            build/Screenshots/**/*.png
+            build/Screenshots/**/*.json
             build/TestSummary.json
           if-no-files-found: ignore
       - name: Preserve test evidence and compiler logs
