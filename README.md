@@ -22,6 +22,10 @@ Le SOS offre 90 secondes, 3 ou 5 minutes, un cadran discret et une progression l
 
 Les préférences sont conservées localement, exportées avec la sauvegarde et réappliquées au lancement. **Les données et exports V1 restent compatibles**, sans nouvelle inscription ni remise à zéro du parcours.
 
+### V2.1 · Fiabilité en cours
+
+Dispositions adaptées aux grandes polices, reprise immédiate du temps SOS au retour dans l'app, annulation des demandes Face ID au passage en arrière-plan, état réel des autorisations et de la programmation des rappels, vérification portable des IPA et recette UI sur deux tailles de simulateur. [Figma V2.1](https://www.figma.com/design/5wrVQf5TcnIVAJmnLN8ePs?node-id=23-261) et [matrice de validation](docs/V2.1.md) disponibles. La validation native et les essais SideStore/LiveContainer sur appareils restent à effectuer ; V2.1 n'est pas encore déclarée validée.
+
 ## Ce que contient l'app
 
 | Espace | Contenu |
@@ -68,9 +72,11 @@ xcodebuild test -project Quit.xcodeproj -scheme Quit -destination 'platform=iOS 
 
 ## Publication automatique
 
-Chaque **push sur main** exécute validation du catalogue, tests XCTest et parcours UI, compilation pour appareil et contrôle des signatures. La release `v0.2.<run_number>` contient `Quit.ipa`, `source.json` et `SHA256SUMS.txt`. Version du catalogue, identifiant, iOS minimum et poids sont lus dans l'IPA réel. Les 30 versions les plus récentes sont conservées dans la source.
+Chaque **push sur main** et chaque PR exécute les tests Python de distribution/contraste et la compilation pour appareil en parallèle, avec contrôle des signatures. Le workflow rapide réserve **4 minutes à la build et 1 minute à la publication** ; les contrôles Python sont limités à une minute. Le workflow séparé **Native reliability validation**, nocturne ou manuel, exécute XCTest et les parcours UI standard/AX5 sur deux tailles d'iPhone en parallèle, avec une limite de **5 minutes par job**. Les tests natifs ne bloquent donc plus la publication courante : leur validation reste requise pour déclarer V2.1 validée. Un délai dépassé annule le job ; les temps de file d'attente GitHub ne sont pas inclus dans ces budgets et la durée d'une build réussie reste à mesurer.
 
-La branche `catalog` porte `source.json` et ne déclenche pas le workflow. Les builds historiques produisent leur release ; seul le commit encore en tête de main actualise le catalogue. Un échec de build laisse la dernière version publiée disponible. Les pull requests sont testées et ne publient pas de release. La relance d'un workflow conserve sa version et remplace ses assets.
+La release `v0.2.<run_number>` contient `Quit.ipa`, `source.json` et `SHA256SUMS.txt`. Version du catalogue, identifiant, iOS minimum et poids sont lus dans l'IPA réel. Les 30 versions les plus récentes sont conservées dans la source.
+
+La branche `catalog` porte `source.json` et ne déclenche pas le workflow. Un nouveau push annule le run précédent encore en cours sur la même référence ; les builds arrivées au terme de la publication produisent leur release. Seul le commit encore en tête de main actualise le catalogue. Un échec de build laisse la dernière version publiée disponible. Les pull requests ne publient pas de release. La relance d'un workflow conserve sa version et remplace ses assets.
 
 [Spécification](docs/PRODUCT.md) · [Implémentation](docs/IMPLEMENTATION.md)
 

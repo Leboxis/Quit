@@ -6,16 +6,19 @@ on:
   pull_request:
     branches: [main]
   workflow_dispatch:
-  schedule:
-    # Full validation once a night, including the end-to-end UI test.
-    - cron: '0 3 * * *'
 
 permissions:
   contents: read
 
+concurrency:
+  group: quit-build-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
+  # Checks and compilation start together: no simulator on the release path.
   checks:
     runs-on: ubuntu-latest
+    timeout-minutes: 1
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -28,75 +31,25 @@ jobs:
           python3 -m unittest discover -s tests -v
 
   build:
-    needs: checks
     runs-on: macos-26
-    timeout-minutes: 45
+    # Reserve the remaining minute for publication. A timeout is a failure.
+    timeout-minutes: 4
     env:
-      # The end-to-end UI test costs about two minutes, so it guards the nightly and
-      # on-demand runs instead of every push. Unit tests keep guarding every push.
-      RUN_UI_TESTS: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
+      HOMEBREW_NO_AUTO_UPDATE: '1'
+      HOMEBREW_NO_INSTALL_CLEANUP: '1'
     outputs:
       version: ${{ steps.version.outputs.version }}
     steps:
       - uses: actions/checkout@v4
       - name: Select newest available Xcode (prefer 27)
         run: python3 scripts/select_xcode.py
-      - name: Install XcodeGen
-        run: brew install xcodegen
+      - name: Ensure XcodeGen is available
+        run: command -v xcodegen >/dev/null || brew install xcodegen
       - name: Set a monotonically increasing app version
         id: version
         run: echo "version=0.2.${GITHUB_RUN_NUMBER}" >> "$GITHUB_OUTPUT"
       - name: Generate Xcode project
         run: xcodegen generate
-      - name: Start available iPhone Simulator
-        id: simulator
-        run: python3 scripts/select_simulator.py
-      - name: Build the app and its tests for the simulator
-        env:
-          SIMULATOR_ID: ${{ steps.simulator.outputs.udid }}
-        run: |
-          set -o pipefail
-          # The simulator boots in the background while this compiles, hiding its boot wait.
-          # COMPILER_INDEX_STORE_ENABLE=NO drops the index store, which only serves code completion.
-          xcodebuild build-for-testing -project Quit.xcodeproj -scheme Quit -configuration Debug \
-            -destination "platform=iOS Simulator,id=$SIMULATOR_ID" \
-            -derivedDataPath build/Simulator CODE_SIGNING_ALLOWED=NO COMPILER_INDEX_STORE_ENABLE=NO \
-            2>&1 | tee build-tests.log
-      - name: Run XCTest and core user flow
-        env:
-          SIMULATOR_ID: ${{ steps.simulator.outputs.udid }}
-        run: |
-          set -o pipefail
-          if [ "$RUN_UI_TESTS" = "true" ]; then
-            ONLY_TESTING=""
-            echo "Full validation: unit tests plus the end-to-end UI test."
-          else
-            ONLY_TESTING="-only-testing:QuitTests"
-            echo "Push validation: unit tests only; the UI test runs nightly and on demand."
-          fi
-          xcrun simctl bootstatus "$SIMULATOR_ID" -b
-          run_tests() {
-            xcodebuild test-without-building -project Quit.xcodeproj -scheme Quit -configuration Debug \
-              -destination "platform=iOS Simulator,id=$SIMULATOR_ID" \
-              -derivedDataPath build/Simulator -resultBundlePath build/TestResults.xcresult \
-              -parallel-testing-enabled NO CODE_SIGNING_ALLOWED=NO $ONLY_TESTING 2>&1 | tee -a build-tests.log
-          }
-          if run_tests; then
-            exit 0
-          fi
-          # GitHub runners intermittently time out loading the simulator Accessibility service,
-          # which aborts the UI test target before a single test runs. Only that flake is retried,
-          # and the retry reuses the bundle compiled above instead of rebuilding it.
-          if ! grep -q 'Timed out while loading Accessibility' build-tests.log; then
-            echo '::error::XCTest failed for a reason other than the simulator accessibility flake.'
-            exit 1
-          fi
-          echo '::warning::Simulator accessibility timed out; rebooting the simulator and retrying once.'
-          xcrun simctl shutdown all || true
-          xcrun simctl boot "$SIMULATOR_ID" || true
-          xcrun simctl bootstatus "$SIMULATOR_ID" -b
-          rm -rf build/TestResults.xcresult
-          run_tests
       - name: Build unsigned arm64 application for iPhone/iPad
         env:
           QUIT_VERSION: ${{ steps.version.outputs.version }}
@@ -125,47 +78,26 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: quit-unsigned-${{ github.sha }}
+          compression-level: 0
           path: |
             build/Quit.ipa
             build/source.json
             build/SHA256SUMS.txt
           if-no-files-found: error
-      - name: Export simulator screenshots and test summary
-        if: always()
-        continue-on-error: true
-        run: |
-          if [ -d build/TestResults.xcresult ]; then
-            xcrun xcresulttool get test-results summary --path build/TestResults.xcresult > build/TestSummary.json
-            xcrun xcresulttool export attachments --path build/TestResults.xcresult --output-path build/Screenshots
-          fi
-      - name: Preserve lightweight native screenshots
-        if: always()
+      - name: Preserve compiler log
+        if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: quit-screenshots-${{ github.run_number }}
-          path: |
-            build/Screenshots/**/*.png
-            build/Screenshots/**/*.json
-            build/TestSummary.json
-          if-no-files-found: ignore
-      - name: Preserve test evidence and compiler logs
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: quit-validation-${{ github.run_number }}
-          path: |
-            build/TestResults.xcresult
-            build/TestSummary.json
-            build/Screenshots
-            build-tests.log
-            build-device.log
+          name: quit-build-log-${{ github.run_number }}
+          path: build-device.log
           if-no-files-found: ignore
 
   publish:
-    needs: build
-    # Only a push publishes: a scheduled or manual run validates without releasing.
+    needs: [checks, build]
+    # Only a push publishes; checks and the device build must both succeed.
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    timeout-minutes: 1
     permissions:
       contents: write
     env:
@@ -185,9 +117,11 @@ jobs:
           Quit $QUIT_VERSION · build automatique du commit $GITHUB_SHA.
 
           IPA arm64 non signé pour SideStore ou LiveContainer. iOS 18 minimum.
-          V2 : ambiances Sauge, Brume et Sable, mode clair/sombre, réglages de confort.
-          SOS avec 90 s, 3 ou 5 min, progression et commandes toujours accessibles.
-          Données et sauvegardes V1 conservées. Check-in, journal, 42 exercices et progrès privés.
+          V2.1 en cours de validation : commandes adaptées aux grandes polices et temps SOS recalculé au retour.
+          Demandes Face ID annulées en arrière-plan ; état des autorisations et de la programmation des rappels affiché.
+          Ambiances Sauge, Brume et Sable, mode clair/sombre et réglages de confort.
+          Données et sauvegardes V1/V2 conservées. Check-in, journal, 42 exercices et progrès privés.
+          Les essais sur appareils SideStore et LiveContainer restent nécessaires pour valider V2.1.
           Aucun certificat, profil de provisioning ni extension Screen Time inclus.
 
           Source de mises à jour : https://raw.githubusercontent.com/$GITHUB_REPOSITORY/catalog/source.json
@@ -204,19 +138,19 @@ jobs:
           }
           # GitHub answers a transient "HTTP 403: Resource not accessible by integration" on the
           # releases API for a short while after a push; retry with backoff instead of going red.
-          for attempt in 1 2 3 4 5 6; do
+          for attempt in 1 2 3; do
             if publish_release; then
               echo "Release $TAG published on attempt $attempt."
               exit 0
             fi
-            if [ "$attempt" -eq 6 ]; then
+            if [ "$attempt" -eq 3 ]; then
               break
             fi
-            delay=$((attempt * 15))
+            delay=$((attempt * 5))
             echo "::warning::Release publish attempt $attempt failed; retrying in ${delay}s."
             sleep "$delay"
           done
-          echo "::error::Unable to publish release $TAG after 6 attempts."
+          echo "::error::Unable to publish release $TAG after 3 attempts."
           exit 1
       - name: Update SideStore/LiveContainer catalog without triggering main
         run: python3 scripts/publish_catalog.py

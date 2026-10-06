@@ -1,0 +1,80 @@
+name: Native reliability validation
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 3 * * *'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: quit-native-validation-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  native:
+    name: XCTest and UI (${{ matrix.size }})
+    runs-on: macos-26
+    timeout-minutes: 5
+    strategy:
+      # Both sizes start independently; one failure must not conceal the other.
+      fail-fast: false
+      matrix:
+        size: [compact, large]
+    env:
+      HOMEBREW_NO_AUTO_UPDATE: '1'
+      HOMEBREW_NO_INSTALL_CLEANUP: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Select newest available Xcode (prefer 27)
+        run: python3 scripts/select_xcode.py
+      - name: Ensure XcodeGen is available
+        run: command -v xcodegen >/dev/null || brew install xcodegen
+      - name: Generate Xcode project
+        run: xcodegen generate
+      - name: Start selected iPhone while tests compile
+        id: simulator
+        env:
+          SIMULATOR_SIZE: ${{ matrix.size }}
+        run: python3 scripts/select_simulator.py --size "$SIMULATOR_SIZE"
+      - name: Build simulator app and tests once
+        env:
+          SIMULATOR_ID: ${{ steps.simulator.outputs.udid }}
+        run: |
+          set -o pipefail
+          xcodebuild build-for-testing -project Quit.xcodeproj -scheme Quit -configuration Debug \
+            -destination "platform=iOS Simulator,id=$SIMULATOR_ID" \
+            -derivedDataPath build/Simulator CODE_SIGNING_ALLOWED=NO COMPILER_INDEX_STORE_ENABLE=NO \
+            2>&1 | tee build-tests.log
+      - name: Run unit tests, standard text and AX5 user flows
+        env:
+          SIMULATOR_ID: ${{ steps.simulator.outputs.udid }}
+        run: |
+          set -o pipefail
+          xcrun simctl bootstatus "$SIMULATOR_ID" -b
+          xcodebuild test-without-building -project Quit.xcodeproj -scheme Quit -configuration Debug \
+            -destination "platform=iOS Simulator,id=$SIMULATOR_ID" \
+            -derivedDataPath build/Simulator -resultBundlePath build/TestResults.xcresult \
+            -parallel-testing-enabled NO CODE_SIGNING_ALLOWED=NO \
+            2>&1 | tee -a build-tests.log
+      - name: Export native screenshots and summary
+        if: always()
+        continue-on-error: true
+        run: |
+          if [ -d build/TestResults.xcresult ]; then
+            xcrun xcresulttool get test-results summary --path build/TestResults.xcresult > build/TestSummary.json
+            xcrun xcresulttool export attachments --path build/TestResults.xcresult --output-path build/Screenshots
+          fi
+      - name: Preserve native validation evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: quit-native-${{ matrix.size }}-${{ github.run_number }}
+          compression-level: 0
+          path: |
+            build/TestResults.xcresult
+            build/TestSummary.json
+            build/Screenshots
+            build-tests.log
+          if-no-files-found: ignore
