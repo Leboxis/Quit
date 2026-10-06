@@ -240,8 +240,23 @@ final class QuitUITests: XCTestCase {
         XCTAssertTrue(app.descendants(matching: .any)["checkin.summary"].firstMatch.waitForExistence(timeout: 5))
     }
 
-    private func choose(_ title: String, in identifier: String, app: XCUIApplication) {
-        let picker = app.descendants(matching: .any)[identifier].firstMatch
+    func testV4V5V6ShortcutsAndRecommendationsAreReachable() {
+        let app = application()
+        app.launch()
+        if app.buttons["onboarding.next"].waitForExistence(timeout: 5) {
+            app.buttons["onboarding.next"].tap()
+            app.buttons["onboarding.next"].tap()
+            app.buttons["onboarding.next"].tap()
+        }
+        XCTAssertTrue(app.buttons["today.sos"].waitForExistence(timeout: 5))
+        app.tabBars.buttons["Parcours"].tap()
+        XCTAssertTrue(app.buttons["journey.recommended"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["journey.weekly"].waitForExistence(timeout: 5))
+        app.tabBars.buttons["Comprendre"].tap()
+        XCTAssertTrue(app.buttons["journal.open"].waitForExistence(timeout: 5))
+    }
+
+    private func choose(_ title: String, in identifier: String, app: XCUIApplication) {        let picker = app.descendants(matching: .any)[identifier].firstMatch
         XCTAssertTrue(picker.waitForExistence(timeout: 5))
         picker.tap()
         let option = app.buttons[title].firstMatch
