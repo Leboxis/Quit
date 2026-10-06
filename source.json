@@ -18,6 +18,15 @@
       "tintColor": "346451",
       "versions": [
         {
+          "version": "0.2.17",
+          "buildVersion": "17",
+          "date": "2026-10-06",
+          "localizedDescription": "Quit V4-V6 : SOS personnalisé avec tes gestes utiles, habitudes concrètes dans Comprendre, et parcours recommandé selon tes difficultés. Journal, check-ins, plans Si → Alors et 42 exercices conservés.",
+          "downloadURL": "https://github.com/Leboxis/Quit/releases/download/v0.2.17/Quit.ipa",
+          "size": 1453108,
+          "minOSVersion": "18.0"
+        },
+        {
           "version": "0.2.13",
           "buildVersion": "13",
           "date": "2026-10-06",
@@ -90,11 +99,11 @@
           "minOSVersion": "18.0"
         }
       ],
-      "version": "0.2.13",
+      "version": "0.2.17",
       "versionDate": "2026-10-06",
-      "versionDescription": "Quit V2 : trois ambiances, apparence claire/sombre, confort visuel et SOS à durée choisie. Journal, parcours et progrès privés conservés.",
-      "downloadURL": "https://github.com/Leboxis/Quit/releases/download/v0.2.13/Quit.ipa",
-      "size": 1354529,
+      "versionDescription": "Quit V4-V6 : SOS personnalisé avec tes gestes utiles, habitudes concrètes dans Comprendre, et parcours recommandé selon tes difficultés. Journal, check-ins, plans Si → Alors et 42 exercices conservés.",
+      "downloadURL": "https://github.com/Leboxis/Quit/releases/download/v0.2.17/Quit.ipa",
+      "size": 1453108,
       "appPermissions": {
         "entitlements": [],
         "privacy": {
