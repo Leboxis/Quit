@@ -14,6 +14,16 @@ https://raw.githubusercontent.com/Leboxis/Quit/catalog/source.json
 
 L'IPA est **non signé**, arm64, pour iOS 18 et versions suivantes. SideStore le signe avec votre méthode habituelle ; LiveContainer le prépare selon son mode de fonctionnement. Quit conserve un identifiant stable (`fr.leboxis.quit`) pour les mises à jour. Faites un export volontaire avant un changement de conteneur.
 
+## V3 · Comprendre les écarts
+
+Une analyse en trois étapes, pensée pour environ une minute, à son rythme : contexte et émotion, déclencheur et moment où interrompre la séquence, puis prochain geste. Une proposition locale **Si → Alors** peut être adaptée et ajoutée volontairement aux plans ; aucune règle n’est créée automatiquement. L’action reste conservée dans l’analyse même sans ajout de plan. Le retour au plan peut être renseigné à la fin ou depuis le journal.
+
+L’accueil supprime l’illustration décorative et regroupe l’intention dans un panneau dépliable. Le journal mélange épisodes, envies et check-ins dans un historique chronologique, avec filtres, détails dépliables et chargement par 20 entrées. Aucune ancienne entrée n’est supprimée par la pagination.
+
+Les sauvegardes V1/V2 restent lisibles : les nouveaux champs d’épisode sont optionnels et le schéma reste inchangé. L’édition ne duplique plus le plan associé, les analyses longues sont conservées et la limite de 100 plans n’empêche pas l’enregistrement sans règle. Les dates de retour déjà renseignées sont préservées.
+
+**Validation de cette modification :** tests XCTest V3 et scénario UI ajoutés, mais non exécutés sur l’hôte Windows (Xcode requis). La maquette Figma n’a pas été modifiée : aucun connecteur Figma n’est exposé dans cette session. Voir le [bilan V3 et la checklist de validation](docs/V3.md).
+
 ## V2 · Design et confort
 
 Trois ambiances cohérentes dans toute l'app : **Sauge**, **Brume**, **Sable**. Apparence automatique, claire ou sombre ; aperçu immédiat depuis Réglages → Apparence et confort. Choix des vibrations et des animations, avec priorité au réglage d'accessibilité iOS. Les contrastes des cartes sont renforcés lorsque l'appareil le demande.

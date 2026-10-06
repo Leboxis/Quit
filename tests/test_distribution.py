@@ -39,6 +39,17 @@ class DistributionTests(unittest.TestCase):
         self.assertEqual(version['minOSVersion'], '18.0')
         self.assertEqual(app['version'], version['version'])
 
+    def test_archive_paths_are_posix_even_on_windows(self):
+        ipa = self.ipa()
+        self.assertEqual(self.module.inspect_ipa(ipa)['CFBundleExecutable'], 'Quit')
+
+    def test_rejects_archive_path_traversal(self):
+        ipa = self.ipa()
+        with zipfile.ZipFile(ipa, 'a') as z:
+            z.writestr('Payload/Quit.app/../unexpected', 'unsafe')
+        with self.assertRaisesRegex(ValueError, 'Unsafe archive path'):
+            self.module.inspect_ipa(ipa)
+
     def test_rejects_mismatched_release_tag(self):
         with self.assertRaises(ValueError):
             self.module.make_source(self.ipa(), 'Leboxis/Quit', 'v0.1.41', '2026-10-05')

@@ -128,6 +128,71 @@ final class QuitUITests: XCTestCase {
         XCTAssertFalse(app.buttons["onboarding.next"].exists, "Le parcours doit être conservé")
     }
 
+    func testEpisodeAnalysisCanBeSavedEditedAndResumed() {
+        let app = application()
+        app.launch()
+        if app.buttons["onboarding.next"].waitForExistence(timeout: 5) {
+            app.buttons["onboarding.next"].tap()
+            app.textFields["onboarding.intention"].tap()
+            app.textFields["onboarding.intention"].typeText("Retrouver mes soirees")
+            app.buttons["onboarding.next"].tap()
+            app.buttons["onboarding.next"].tap()
+        }
+        app.tabBars.buttons["Aujourd'hui"].tap()
+        reveal(app.buttons["episode.open"], in: app)
+        app.buttons["episode.open"].tap()
+        choose("Au lit", in: "episode.context", app: app)
+        choose("Fatigué", in: "episode.emotion", app: app)
+        capture(app, name: "V3-Contexte")
+        app.buttons["episode.next"].tap()
+        choose("Habitude", in: "episode.trigger", app: app)
+        app.buttons["episode.suggestion"].tap()
+        capture(app, name: "V3-Interruption")
+        app.buttons["episode.next"].tap()
+        reveal(app.switches["episode.keepPlan"], in: app)
+        app.switches["episode.keepPlan"].tap()
+        capture(app, name: "V3-Regle")
+        app.buttons["episode.save"].tap()
+        XCTAssertTrue(app.buttons["episode.resume"].waitForExistence(timeout: 5))
+        app.buttons["episode.resume"].tap()
+        app.tabBars.buttons["Comprendre"].tap()
+        reveal(app.buttons["journal.open"], in: app)
+        app.buttons["journal.open"].tap()
+        let episode = app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH %@", "journal.episode.")).firstMatch
+        XCTAssertTrue(episode.waitForExistence(timeout: 5))
+        let episodeIdentifier = episode.identifier
+        episode.tap()
+        XCTAssertTrue(app.staticTexts["Plan repris"].exists)
+        let editID = episodeIdentifier.replacingOccurrences(of: "journal.episode.", with: "journal.edit.")
+        app.buttons[editID].tap()
+        app.buttons["episode.next"].tap()
+        app.buttons["episode.next"].tap()
+        // Multiline SwiftUI fields may be exposed as a text field or a text view.
+        let action = app.descendants(matching: .any)["episode.plan"].firstMatch
+        XCTAssertTrue(action.waitForExistence(timeout: 5))
+        XCTAssertTrue((action.value as? String ?? "").contains("hors de la chambre"))
+        app.buttons["episode.save"].tap()
+        XCTAssertTrue(app.buttons["episode.finish"].waitForExistence(timeout: 5))
+        app.buttons["episode.finish"].tap()
+        XCTAssertTrue(app.descendants(matching: .any)[episodeIdentifier].firstMatch.exists)
+        capture(app, name: "V3-Journal-Compact")
+        app.terminate()
+        app.launch()
+        app.tabBars.buttons["Comprendre"].tap()
+        reveal(app.buttons["journal.open"], in: app)
+        app.buttons["journal.open"].tap()
+        XCTAssertTrue(app.descendants(matching: .any)[episodeIdentifier].firstMatch.waitForExistence(timeout: 5))
+    }
+
+    private func choose(_ title: String, in identifier: String, app: XCUIApplication) {
+        let picker = app.descendants(matching: .any)[identifier].firstMatch
+        XCTAssertTrue(picker.waitForExistence(timeout: 5))
+        picker.tap()
+        let option = app.buttons[title].firstMatch
+        XCTAssertTrue(option.waitForExistence(timeout: 5))
+        option.tap()
+    }
+
     private func reveal(_ element: XCUIElement, in app: XCUIApplication) {
         // Lazy grid choices need scrolling before they enter the accessibility tree.
         for _ in 0..<8 {

@@ -34,6 +34,7 @@ struct InsightsView: View {
                         .foregroundStyle(QuitTheme.secondary)
                 }
                 NavigationLink { JournalView() } label: { Label("Mon journal", systemImage: "book.closed").frame(minHeight: 44) }
+                    .accessibilityIdentifier("journal.open")
             }
         }.navigationTitle("Comprendre")
     }

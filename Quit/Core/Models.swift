@@ -145,6 +145,9 @@ struct Episode: Codable, Identifiable {
     var context: Context
     var trigger: Trigger
     var interruption = ""
+    // Optional additive fields keep V1/V2 backups readable.
+    var nextAction: String?
+    var planID: UUID?
     var recoveredAt: Date?
 }
 
@@ -202,7 +205,7 @@ struct QuitData: Codable {
               Set(plans.map(\.id)).count == plans.count else { throw DataError.invalidData }
         guard checkIns.allSatisfy({ (0...10).contains($0.urge) && (1...3).contains($0.energy) && (1...3).contains($0.stress) && $0.date <= maximumDate }),
               urges.allSatisfy({ (0...10).contains($0.initial) && (0...10).contains($0.final) && $0.date <= maximumDate }),
-              episodes.allSatisfy({ $0.date <= maximumDate && $0.interruption.count <= 2000 }),
+              episodes.allSatisfy({ $0.date <= maximumDate && $0.interruption.count <= 2000 && ($0.nextAction?.count ?? 0) <= 500 }),
               plans.allSatisfy({ !$0.condition.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !$0.action.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && $0.condition.count <= 500 && $0.action.count <= 500 })
         else { throw DataError.invalidData }
         for episode in episodes {

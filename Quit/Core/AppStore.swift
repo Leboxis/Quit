@@ -49,6 +49,63 @@ final class AppStore {
         }
     }
 
+    /// Save analysis and its optional rule in one transaction; never duplicate a linked rule.
+    @discardableResult
+    func saveEpisode(_ item: Episode, keepPlan: Bool, returnedToPlan: Bool, now: Date = Date()) -> Bool {
+        var episode = item
+        episode.interruption = item.interruption.trimmingCharacters(in: .whitespacesAndNewlines)
+        episode.nextAction = item.nextAction?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let previous = data.episodes.first { $0.id == item.id }
+        episode.recoveredAt = returnedToPlan ? previous?.recoveredAt ?? now : nil
+        if let recovery = episode.recoveredAt, recovery < episode.date {
+            errorMessage = "La date de l’épisode doit précéder le retour au plan. Corrige la date ou décoche le retour au plan."
+            return false
+        }
+        let linked = (previous?.planID).flatMap { id in data.plans.first { $0.id == id } }
+        let matching = data.plans.contains { $0.condition == episode.interruption && $0.action == (episode.nextAction ?? "") }
+        if keepPlan && !episode.interruption.isEmpty && !(episode.nextAction ?? "").isEmpty && linked == nil && !matching && data.plans.count >= 100 {
+            errorMessage = "Tes 100 plans sont conservés. Enregistre l’analyse sans ajouter de règle, ou retire un plan."
+            return false
+        }
+        return update { data in
+            let action = episode.nextAction ?? ""
+            if keepPlan && !episode.interruption.isEmpty && !action.isEmpty {
+                if let id = previous?.planID, let index = data.plans.firstIndex(where: { $0.id == id }) {
+                    data.plans[index].condition = episode.interruption
+                    data.plans[index].action = action
+                    episode.planID = id
+                } else if let matching = data.plans.first(where: { $0.condition == episode.interruption && $0.action == action }) {
+                    episode.planID = matching.id
+                } else {
+                    let plan = IfThenPlan(condition: episode.interruption, action: action)
+                    data.plans.append(plan)
+                    episode.planID = plan.id
+                }
+            } else {
+                // Declining a suggestion never deletes a previously chosen personal rule.
+                episode.planID = previous?.planID
+            }
+            if let index = data.episodes.firstIndex(where: { $0.id == episode.id }) {
+                data.episodes[index] = episode
+            } else {
+                data.episodes.append(episode)
+            }
+        }
+    }
+
+    @discardableResult
+    func resumePlan(after episodeID: UUID, now: Date = Date()) -> Bool {
+        guard data.episodes.contains(where: { $0.id == episodeID }) else {
+            errorMessage = "Cet épisode n’est plus disponible. Retourne au journal."
+            return false
+        }
+        return update { data in
+            if let index = data.episodes.firstIndex(where: { $0.id == episodeID }), data.episodes[index].recoveredAt == nil {
+                data.episodes[index].recoveredAt = max(now, data.episodes[index].date)
+            }
+        }
+    }
+
     func reload() {
         do {
             data = try vault.load() ?? QuitData()
