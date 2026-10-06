@@ -5,7 +5,7 @@ struct SOSView: View {
     private enum Step: Int, Hashable { case intensity, pause, observe, choose, reassess, done }
     @Environment(AppStore.self) private var store
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.quitReduceMotion) private var reduceMotion
     @State private var step: Step = .intensity
     @State private var initial = 5.0
     @State private var final = 5.0
@@ -220,7 +220,7 @@ private struct ObservationDial: View {
     let remaining: Int
     let total: Int
     @Environment(\.quitAccent) private var accent
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.quitReduceMotion) private var reduceMotion
 
     var body: some View {
         ZStack {

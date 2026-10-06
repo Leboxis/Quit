@@ -17,7 +17,7 @@ private struct ExperienceContainer: View {
         RootView()
             .environment(\.quitAccent, store.data.experience.accent)
             .environment(\.quitHaptics, store.data.experience.haptics)
-            .environment(\.accessibilityReduceMotion, systemReduceMotion || store.data.experience.reduceAnimations)
+            .environment(\.quitReduceMotion, systemReduceMotion || store.data.experience.reduceAnimations)
             .preferredColorScheme(store.data.experience.appearance.colorScheme)
             .tint(store.data.experience.accent.color)
     }

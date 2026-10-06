@@ -28,6 +28,7 @@ extension AppAppearance {
 extension EnvironmentValues {
     @Entry var quitAccent: AccentTheme = .sage
     @Entry var quitHaptics = true
+    @Entry var quitReduceMotion = false
 }
 
 struct QuitCard<Content: View>: View {
@@ -130,7 +131,7 @@ struct QuitBottomBar<Content: View>: View {
 
 struct EmotionPicker: View {
     @Environment(\.quitAccent) private var accent
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.quitReduceMotion) private var reduceMotion
     @Environment(\.quitHaptics) private var haptics
     @Binding var selection: Emotion
     var body: some View {
@@ -180,7 +181,7 @@ struct IntensitySlider: View {
 
 struct ContourArtwork: View {
     @Environment(\.quitAccent) private var accent
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.quitReduceMotion) private var reduceMotion
     var animated = false
     var body: some View {
         TimelineView(.animation(minimumInterval: 1.0 / 20, paused: !animated || reduceMotion)) { context in
