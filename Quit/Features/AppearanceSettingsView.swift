@@ -6,14 +6,16 @@ struct AppearanceSettingsView: View {
 
     var body: some View {
         ScreenContent {
-            Text("Ton espace,\nà ton image.").font(.largeTitle.weight(.semibold))
-            Text("Des teintes douces et juste le mouvement dont tu as besoin.").foregroundStyle(QuitTheme.secondary)
+            Text("Des teintes douces et juste le mouvement dont tu as besoin.").font(.subheadline).foregroundStyle(QuitTheme.secondary)
             QuitCard(tinted: true) {
                 Text("APERÇU").font(.caption.weight(.medium)).tracking(1.5).foregroundStyle(accent.color)
-                ContourArtwork().frame(height: 70)
                 Text("Un geste à la fois.").font(.title2.weight(.medium))
                 Text("Ton parcours continue, à ton rythme.").foregroundStyle(QuitTheme.secondary)
                 Label("Un espace pour toi", systemImage: "leaf").foregroundStyle(accent.color)
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: 16) { contentColors }
+                    VStack(alignment: .leading, spacing: 8) { contentColors }
+                }
             }
             QuitCard {
                 Text("Ton ambiance").font(.headline)
@@ -69,6 +71,13 @@ struct AppearanceSettingsView: View {
             .accessibilityLabel("Ambiance \(theme.title)")
             .accessibilityAddTraits(accent == theme ? [.isSelected] : [])
         }
+    }
+
+    private var contentColors: some View {
+        Group {
+            Label("Repères", systemImage: "chart.xyaxis.line").foregroundStyle(QuitTone.reflection.color)
+            Label("Soutien", systemImage: "heart").foregroundStyle(QuitTone.support.color)
+        }.font(.caption).fixedSize(horizontal: true, vertical: true)
     }
 
     private func preference<Value>(_ keyPath: WritableKeyPath<ExperiencePreferences, Value>) -> Binding<Value> {

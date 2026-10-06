@@ -9,6 +9,41 @@ enum QuitTheme {
     static let border = Color("Border")
 }
 
+// Content colors complement the user's accent; primary actions keep that accent.
+enum QuitTone {
+    case reflection, support, preparation
+
+    var color: Color {
+        switch self {
+        case .reflection: Color("SlateAccent")
+        case .support: Color("PlumAccent")
+        case .preparation: QuitTheme.amber
+        }
+    }
+    var soft: Color {
+        switch self {
+        case .reflection: Color("SlateSoft")
+        case .support: Color("PlumSoft")
+        case .preparation: Color("AmberSoft")
+        }
+    }
+}
+
+struct QuitSectionTitle: View {
+    let title: String
+    let symbol: String
+    var tone: QuitTone? = nil
+    @Environment(\.quitAccent) private var accent
+
+    var body: some View {
+        Label(title, systemImage: symbol)
+            .font(.headline)
+            .foregroundStyle(tone?.color ?? accent.color)
+            .fixedSize(horizontal: false, vertical: true)
+            .accessibilityAddTraits(.isHeader)
+    }
+}
+
 extension AccentTheme {
     var color: Color {
         switch self { case .sage: Color("AccentColor"); case .slate: Color("SlateAccent"); case .sand: Color("SandAccent") }
@@ -35,14 +70,16 @@ struct QuitCard<Content: View>: View {
     @Environment(\.quitAccent) private var accent
     @Environment(\.colorSchemeContrast) private var contrast
     var tinted = false
+    var tone: QuitTone? = nil
     @ViewBuilder var content: Content
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) { content }
+        VStack(alignment: .leading, spacing: 12) { content }
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(22)
-            .background(tinted ? accent.soft : QuitTheme.surface, in: RoundedRectangle(cornerRadius: 24))
+            .padding(18)
+            .background(tinted ? (tone?.soft ?? accent.soft) : QuitTheme.surface,
+                        in: RoundedRectangle(cornerRadius: 20, style: .continuous))
             .overlay {
-                RoundedRectangle(cornerRadius: 24, style: .continuous)
+                RoundedRectangle(cornerRadius: 20, style: .continuous)
                     .stroke(QuitTheme.border.opacity(contrast == .increased ? 1 : 0.45), lineWidth: contrast == .increased ? 1.5 : 0.5)
             }
     }
@@ -82,19 +119,25 @@ struct QuitPrimaryButton: View {
 
 struct QuietRow: View {
     @Environment(\.quitAccent) private var accent
+    @ScaledMetric(relativeTo: .body) private var symbolSize = 36.0
     let title: String
     var detail: String? = nil
     let symbol: String
+    var tone: QuitTone? = nil
     var body: some View {
         HStack(spacing: 14) {
-            Image(systemName: symbol).font(.title3).foregroundStyle(accent.color)
-                .frame(width: 38, height: 44)
+            Image(systemName: symbol).font(.body.weight(.medium))
+                .foregroundStyle(tone?.color ?? accent.color)
+                .frame(width: symbolSize, height: symbolSize)
+                .background(tone?.soft ?? accent.soft, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 3) {
                 Text(title).font(.headline).foregroundStyle(QuitTheme.text)
                 if let detail { Text(detail).font(.subheadline).foregroundStyle(QuitTheme.secondary) }
             }
             Spacer(minLength: 0)
             Image(systemName: "chevron.right").font(.caption).foregroundStyle(QuitTheme.secondary)
+                .accessibilityHidden(true)
         }
         .frame(minHeight: 52)
         .contentShape(Rectangle())
@@ -105,9 +148,9 @@ struct ScreenContent<Content: View>: View {
     @ViewBuilder var content: Content
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 22) { content }
+            VStack(alignment: .leading, spacing: 16) { content }
                 .frame(maxWidth: 620)
-                .padding(.horizontal, 22)
+                .padding(.horizontal, 18)
                 .padding(.top, 12)
                 .padding(.bottom, 28)
                 .frame(maxWidth: .infinity)

@@ -73,8 +73,8 @@ struct SOSView: View {
     }
 
     private var intensityStep: some View {
-        VStack(alignment: .leading, spacing: 26) {
-            Text("Une envie n'est\npas un ordre.").font(.largeTitle.weight(.semibold))
+        VStack(alignment: .leading, spacing: 18) {
+            Text("Une envie n'est pas un ordre.").font(.title2.weight(.semibold))
             Text("On peut créer un peu d'espace avant le prochain geste.").foregroundStyle(QuitTheme.secondary)
             QuitCard { IntensitySlider(title: "Intensité de l'envie", value: $initial) }
             Picker("Temps d'observation", selection: $duration) {
@@ -86,9 +86,8 @@ struct SOSView: View {
     }
 
     private var pauseStep: some View {
-        VStack(alignment: .leading, spacing: 26) {
-            Image(systemName: "door.left.hand.open").font(.system(size: 48, weight: .light)).foregroundStyle(accent.color)
-            Text("Change le décor.").font(.largeTitle.weight(.semibold))
+        VStack(alignment: .leading, spacing: 18) {
+            QuitSectionTitle(title: "Change le décor.", symbol: "door.left.hand.open")
             QuitCard(tinted: true) {
                 Text("Pose le téléphone.").font(.title2.weight(.medium))
                 Text("Si tu peux, lève-toi et change de pièce. Tu n'as rien à résoudre pour l'instant.").foregroundStyle(QuitTheme.secondary)
@@ -98,12 +97,12 @@ struct SOSView: View {
     }
 
     private var observeStep: some View {
-        VStack(alignment: .leading, spacing: 24) {
-            Text("Laisse passer\nla vague.").font(.largeTitle.weight(.semibold))
+        VStack(alignment: .leading, spacing: 18) {
+            Text("Laisse passer la vague.").font(.title2.weight(.semibold))
             ObservationDial(remaining: remaining, total: duration.seconds)
             Text("Respire naturellement. Remarque les sensations, les pensées et leurs changements. Tu peux choisir de ne pas agir, même si l'envie reste présente.")
                 .foregroundStyle(QuitTheme.secondary)
-            QuitCard(tinted: true) {
+            QuitCard(tinted: true, tone: .reflection) {
                 Text("Prendre de la distance").font(.headline)
                 Text("« Je remarque que mon esprit me propose de regarder. »")
             }
@@ -119,8 +118,8 @@ struct SOSView: View {
     }
 
     private var chooseStep: some View {
-        VStack(alignment: .leading, spacing: 24) {
-            Text("Un prochain\ngeste possible.").font(.largeTitle.weight(.semibold))
+        VStack(alignment: .leading, spacing: 18) {
+            Text("Un prochain geste possible.").font(.title2.weight(.semibold))
             Text("Choisis une action. Tu peux sortir de l'app, puis revenir pour faire le point.").foregroundStyle(QuitTheme.secondary)
             ForEach(store.suggestions(for: emotion)) { item in
                 Button { strategy = item } label: {
@@ -138,8 +137,8 @@ struct SOSView: View {
     }
 
     private var reassessStep: some View {
-        VStack(alignment: .leading, spacing: 24) {
-            Text("Et maintenant ?").font(.largeTitle.weight(.semibold))
+        VStack(alignment: .leading, spacing: 18) {
+            Text("Et maintenant ?").font(.title2.weight(.semibold))
             QuitCard { IntensitySlider(title: "Envie maintenant", value: $final) }
             VStack(alignment: .leading, spacing: 10) {
                 ForEach(UrgeOutcome.allCases) { item in
@@ -157,9 +156,9 @@ struct SOSView: View {
     }
 
     private var doneStep: some View {
-        VStack(alignment: .leading, spacing: 26) {
-            Image(systemName: outcome == .passed ? "leaf" : "arrow.uturn.forward").font(.system(size: 46, weight: .light)).foregroundStyle(accent.color)
-            Text(outcome == .passed ? "Tu as créé\nun espace." : "Ton parcours\ncontinue.").font(.largeTitle.weight(.semibold))
+        VStack(alignment: .leading, spacing: 18) {
+            QuitSectionTitle(title: outcome == .passed ? "Tu as créé un espace." : "Ton parcours continue.",
+                             symbol: outcome == .passed ? "leaf" : "arrow.uturn.forward")
             QuitCard(tinted: true) {
                 Text("\(Int(initial)) → \(Int(final))").font(.system(.largeTitle, design: .rounded))
                 Text("Intensité avant et après").foregroundStyle(QuitTheme.secondary)

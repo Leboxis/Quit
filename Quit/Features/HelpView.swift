@@ -5,24 +5,32 @@ struct HelpView: View {
     let onSOS: () -> Void
     var body: some View {
         ScreenContent {
-            Text("Tu peux être\naccompagné.").font(.title2.weight(.medium))
-            QuitCard(tinted: true) {
-                Label("Une envie maintenant ?", systemImage: "water.waves").font(.headline)
-                Text("Créer une pause, observer, choisir un geste.").foregroundStyle(QuitTheme.secondary)
-                QuitPrimaryButton(title: "Ouvrir SOS") { onSOS() }
+            Text("Du soutien, quand tu en as besoin.").font(.subheadline).foregroundStyle(QuitTheme.secondary)
+            QuitCard(tinted: true, tone: .reflection) {
+                Button(action: onSOS) {
+                    QuietRow(title: "Une envie maintenant ?", detail: "Ouvrir SOS pour créer une pause", symbol: "water.waves", tone: .reflection)
+                }.buttonStyle(.plain)
             }
-            NavigationLink { SupportContactView() } label: {
-                QuitCard { QuietRow(title: "J'ai besoin de parler", detail: "Une personne que tu choisis", symbol: "bubble.left.and.bubble.right") }
-            }.buttonStyle(.plain)
-            NavigationLink { PlansView() } label: {
-                QuitCard { QuietRow(title: "Mes plans Si → Alors", detail: "Préparer les moments sensibles", symbol: "arrow.triangle.branch") }
-            }.buttonStyle(.plain)
-            NavigationLink { ProfessionalHelpView() } label: {
-                QuitCard { QuietRow(title: "Un soutien professionnel", detail: "Trouver un accompagnement", symbol: "person.crop.circle.badge.checkmark") }
-            }.buttonStyle(.plain)
-            NavigationLink { EvidenceView() } label: {
-                QuitCard { QuietRow(title: "Sources et limites", detail: "Comprendre les outils", symbol: "book") }
-            }.buttonStyle(.plain)
+            QuitCard {
+                QuitSectionTitle(title: "Préparer et échanger", symbol: "heart", tone: .support)
+                NavigationLink { SupportContactView() } label: {
+                    QuietRow(title: "J'ai besoin de parler", detail: "Une personne que tu choisis", symbol: "bubble.left.and.bubble.right", tone: .support)
+                }.buttonStyle(.plain)
+                Divider()
+                NavigationLink { PlansView() } label: {
+                    QuietRow(title: "Mes plans Si → Alors", detail: "Préparer les moments sensibles", symbol: "arrow.triangle.branch", tone: .preparation)
+                }.buttonStyle(.plain)
+            }
+            QuitCard {
+                QuitSectionTitle(title: "Aller plus loin", symbol: "person.crop.circle", tone: .reflection)
+                NavigationLink { ProfessionalHelpView() } label: {
+                    QuietRow(title: "Un soutien professionnel", detail: "Trouver un accompagnement", symbol: "person.crop.circle.badge.checkmark", tone: .support)
+                }.buttonStyle(.plain)
+                Divider()
+                NavigationLink { EvidenceView() } label: {
+                    QuietRow(title: "Sources et limites", detail: "Comprendre les outils", symbol: "book", tone: .reflection)
+                }.buttonStyle(.plain)
+            }
         }.navigationTitle("Aide")
     }
 }
@@ -47,7 +55,7 @@ struct SupportContactView: View {
                     saved = store.update { $0.profile.contactName = name; $0.profile.contactPhone = phone }
                 }.frame(minHeight: 44)
             }
-            QuitCard(tinted: true) {
+            QuitCard(tinted: true, tone: .support) {
                 Text("Un message possible").font(.headline)
                 Text("« \(message) »")
                 if MFMessageComposeViewController.canSendText() && !phone.isEmpty {
@@ -91,8 +99,8 @@ struct MessageComposer: UIViewControllerRepresentable {
 struct ProfessionalHelpView: View {
     var body: some View {
         ScreenContent {
-            Text("Une aide adaptée\nà ta situation.").font(.title2.weight(.medium))
-            QuitCard(tinted: true) {
+            Text("Une aide adaptée à ta situation.").font(.title2.weight(.medium))
+            QuitCard(tinted: true, tone: .support) {
                 Text("Quand demander du soutien ?").font(.headline)
                 Text("Si tu perds régulièrement le contrôle, si cela affecte tes relations, ton travail ou ton bien-être, ou si tu te sens en difficulté, un professionnel peut t'aider à comprendre ce qui se passe.")
             }

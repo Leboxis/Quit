@@ -16,6 +16,12 @@ L'IPA est **non signé**, arm64, pour iOS 18 et versions suivantes. SideStore le
 
 ## V3 · Comprendre les écarts
 
+### Lisibilité et palette
+
+Les quatre onglets utilisent une navigation compacte, avec SOS accessible dans la barre supérieure. L'accueil donne la priorité au check-in ; Parcours regroupe les semaines et les exercices en listes et propose le prochain exercice inexploré. Comprendre garde les chiffres utiles au premier niveau et rend les analyses secondaires dépliables. Aide regroupe les liens par usage. Les cartes et espacements sont allégés dans les écrans secondaires aussi.
+
+L'accent choisi reste celui des actions principales. Des touches de bleu pour les repères, de prune pour le soutien et d'ocre pour la préparation complètent des surfaces neutres, en clair et en sombre. Les graphiques associent couleurs, symboles et nombres. Les contrôles de contraste et les 21 tests Python passent ; compilation et recette visuelle iOS restent à faire sur Mac. Voir l'[audit par onglet](docs/LISIBILITE.md).
+
 Une analyse en trois étapes, pensée pour environ une minute, à son rythme : contexte et émotion, déclencheur et moment où interrompre la séquence, puis prochain geste. Une proposition locale **Si → Alors** peut être adaptée et ajoutée volontairement aux plans ; aucune règle n’est créée automatiquement. L’action reste conservée dans l’analyse même sans ajout de plan. Le retour au plan peut être renseigné à la fin ou depuis le journal.
 
 L’accueil supprime l’illustration décorative et regroupe l’intention dans un panneau dépliable. Le journal mélange épisodes, envies et check-ins dans un historique chronologique, avec filtres, détails dépliables et chargement par 20 entrées. Aucune ancienne entrée n’est supprimée par la pagination.

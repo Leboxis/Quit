@@ -6,23 +6,29 @@ struct PlansView: View {
     var body: some View {
         ScreenContent {
             Text("Prépare un geste concret avant le moment difficile. Quelques plans qui te ressemblent suffisent.")
-                .foregroundStyle(QuitTheme.secondary)
+                .font(.subheadline).foregroundStyle(QuitTheme.secondary)
             if store.data.plans.isEmpty {
                 ContentUnavailableView("Ton premier plan", systemImage: "arrow.triangle.branch", description: Text("Si je prends mon téléphone au lit, alors je le pose dans la cuisine."))
             }
             ForEach(store.data.plans) { plan in
-                QuitCard(tinted: true) {
-                    Text("SI").font(.caption.weight(.semibold)).tracking(2).foregroundStyle(QuitTheme.secondary)
-                    Text(plan.condition).font(.title3.weight(.medium))
-                    Text("ALORS").font(.caption.weight(.semibold)).tracking(2).foregroundStyle(QuitTheme.secondary)
-                    Text(plan.action)
-                    Button("Retirer ce plan", role: .destructive) { store.update { $0.plans.removeAll { $0.id == plan.id } } }
-                        .font(.footnote).frame(minHeight: 44)
+                QuitCard {
+                    HStack(alignment: .top, spacing: 12) {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Si \(plan.condition)").font(.subheadline).foregroundStyle(QuitTheme.secondary)
+                            Label("Alors", systemImage: "arrow.turn.down.right")
+                                .font(.caption.weight(.semibold)).foregroundStyle(QuitTone.preparation.color)
+                            Text(plan.action).font(.body.weight(.medium))
+                        }.fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, alignment: .leading)
+                        Menu {
+                            Button("Retirer ce plan", role: .destructive) { store.update { $0.plans.removeAll { $0.id == plan.id } } }
+                        } label: { Image(systemName: "ellipsis").frame(width: 44, height: 44) }
+                        .accessibilityLabel("Actions de ce plan")
+                    }
                 }
             }
             QuitPrimaryButton(title: "Créer un plan", symbol: "plus") { showNewPlan = true }
                 .disabled(store.data.plans.count >= 100)
-            NavigationLink { EnvironmentView() } label: { QuietRow(title: "Protéger mon environnement", detail: "Réglages iOS et gestes volontaires", symbol: "shield") }
+            NavigationLink { EnvironmentView() } label: { QuietRow(title: "Protéger mon environnement", detail: "Réglages iOS et gestes volontaires", symbol: "shield", tone: .preparation) }
                 .buttonStyle(.plain)
         }
         .navigationTitle("Si → Alors").navigationBarTitleDisplayMode(.inline)
@@ -39,7 +45,7 @@ struct PlanEditorView: View {
     var body: some View {
         NavigationStack {
             ScreenContent {
-                Text("Un plan simple.\nUn geste faisable.").font(.largeTitle.weight(.semibold))
+                Text("Un plan simple, un geste faisable.").font(.subheadline).foregroundStyle(QuitTheme.secondary)
                 QuitCard {
                     Text("Si…").font(.headline)
                     TextField("La situation que je veux préparer", text: $condition, axis: .vertical).lineLimit(2...4)
@@ -61,7 +67,7 @@ struct EnvironmentView: View {
     var body: some View {
         ScreenContent {
             Text("Rendre le prochain choix plus facile.").font(.title2.weight(.medium))
-            QuitCard(tinted: true) {
+            QuitCard(tinted: true, tone: .preparation) {
                 Label("Une friction volontaire", systemImage: "shield").font(.headline)
                 Text("Cette version de Quit ne peut pas bloquer tes apps ou tes sites. Ses plans t'aident à préparer une action. Le blocage Screen Time intégré demande une distribution et des autorisations Apple adaptées.")
             }

@@ -79,15 +79,7 @@ struct AppTabs: View {
     @State private var showSettings = false
 
     var body: some View {
-        Group {
-            if #available(iOS 26, *) {
-                tabs.tabViewBottomAccessory { sosButton }
-            } else {
-                tabs.safeAreaInset(edge: .bottom, spacing: 0) {
-                    sosButton.padding(.horizontal, 22).padding(.vertical, 8).background(.regularMaterial)
-                }
-            }
-        }
+        tabs
         .fullScreenCover(isPresented: $showSOS) { SOSView() }
         .sheet(isPresented: $showSettings) { SettingsView() }
     }
@@ -113,25 +105,24 @@ struct AppTabs: View {
         Button {
             showSOS = true
         } label: {
-            HStack {
-                Image(systemName: "water.waves")
-                Text("J'ai une envie").font(.headline)
-                Spacer()
-                Image(systemName: "arrow.up.right").font(.subheadline)
-            }
+            Label("SOS", systemImage: "water.waves")
+            .font(.subheadline.weight(.semibold))
             .foregroundStyle(accent.color)
-            .padding(.horizontal, 20).frame(minHeight: 48)
+            .frame(minHeight: 44)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .accessibilityIdentifier("sos.open")
+        .accessibilityLabel("SOS, j'ai une envie")
         .accessibilityHint("Ouvre un exercice pour traverser l'envie")
     }
 
     private func tabNavigation<Content: View>(@ViewBuilder content: () -> Content) -> some View {
         NavigationStack {
             content()
+                .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
+                    ToolbarItem(placement: .topBarLeading) { sosButton }
                     ToolbarItem(placement: .topBarTrailing) {
                         Button("Réglages", systemImage: "slider.horizontal.3") { showSettings = true }
                             .accessibilityIdentifier("settings.open")

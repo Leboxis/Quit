@@ -139,8 +139,7 @@ struct JournalView: View {
                         .fixedSize(horizontal: false, vertical: true)
                         .frame(maxWidth: .infinity, alignment: .leading)
                     } label: {
-                        Text("Épisode · \(episode.emotion.title)")
-                            .font(.headline).fixedSize(horizontal: false, vertical: true)
+                        QuitSectionTitle(title: "Épisode · \(episode.emotion.title)", symbol: "arrow.uturn.forward", tone: .preparation)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .accessibilityIdentifier("journal.episode.\(episode.id.uuidString)")
@@ -153,13 +152,12 @@ struct JournalView: View {
                 }
             case .urge(let session):
                 Label("Envie · \(session.initial) → \(session.final)", systemImage: "water.waves")
-                    .font(.headline).fixedSize(horizontal: false, vertical: true)
+                    .font(.headline).foregroundStyle(QuitTone.reflection.color).fixedSize(horizontal: false, vertical: true)
                 Text("\(session.strategy.title) · \(session.outcome.title)")
                     .font(.subheadline).foregroundStyle(QuitTheme.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             case .checkIn(let item):
-                Text("Check-in · \(item.emotion.title)")
-                    .font(.headline).fixedSize(horizontal: false, vertical: true)
+                QuitSectionTitle(title: "Check-in · \(item.emotion.title)", symbol: "checkmark.circle")
                 Text("Envie \(item.urge)/10 · \(item.aligned.map { $0 ? "Journée alignée" : "Objectif non atteint" } ?? "Bilan à préciser")")
                     .font(.subheadline).foregroundStyle(QuitTheme.secondary)
                     .fixedSize(horizontal: false, vertical: true)

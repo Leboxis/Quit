@@ -3,7 +3,7 @@ from pathlib import Path
 from PIL import Image, ImageDraw
 
 root = Path(__file__).resolve().parents[1]
-colors = {'Background': ('F7F6F2','101513'), 'Surface': ('FFFFFF','19211D'), 'AccentColor': ('346451','AACBB1'), 'AccentSoft': ('E7EEE6','23362B'), 'TextPrimary': ('18231D','F3F4EF'), 'TextSecondary': ('59675F','A5B1A8'), 'Amber': ('8C632E','D9BB8C'), 'Border': ('E0E5DD','354039'), 'OnAccent': ('FFFFFF','101513'), 'SlateAccent': ('3B5F7A','AFC7DB'), 'SlateSoft': ('E7EDF3','1F303D'), 'SandAccent': ('745637','D6BE9A'), 'SandSoft': ('F0E9DF','352C21')}
+colors = {'Background': ('F5F5F2','121615'), 'Surface': ('FFFFFF','1D2321'), 'AccentColor': ('346451','AACBB1'), 'AccentSoft': ('E7EEE6','23362B'), 'TextPrimary': ('18231D','F3F4EF'), 'TextSecondary': ('59675F','A5B1A8'), 'Amber': ('865E2A','D9BB8C'), 'AmberSoft': ('F5EDDF','332B20'), 'Border': ('DEE3DF','3B4540'), 'OnAccent': ('FFFFFF','101513'), 'SlateAccent': ('3B5F7A','AFC7DB'), 'SlateSoft': ('E7EDF3','1F303D'), 'SandAccent': ('745637','D6BE9A'), 'SandSoft': ('F0E9DF','352C21'), 'PlumAccent': ('75536D','D4B6CC'), 'PlumSoft': ('F1EAF0','342835')}
 assets=root/'Quit/Resources/Assets.xcassets'
 assets.mkdir(parents=True,exist_ok=True)
 (assets/'Contents.json').write_text(json.dumps({'info':{'author':'xcode','version':1}},indent=2)+'\n')

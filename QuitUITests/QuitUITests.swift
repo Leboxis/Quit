@@ -76,9 +76,18 @@ final class QuitUITests: XCTestCase {
         app.buttons["sos.save"].tap()
         XCTAssertTrue(app.buttons["sos.finish"].waitForExistence(timeout: 5))
         app.buttons["sos.finish"].tap()
-        XCTAssertTrue(app.tabBars.buttons["Comprendre"].exists)
-        app.tabBars.buttons["Comprendre"].tap()
-        capture(app, name: "V2-Comprendre")
+        for tab in ["Aujourd'hui", "Parcours", "Comprendre", "Aide"] {
+            XCTAssertTrue(app.tabBars.buttons[tab].exists)
+            app.tabBars.buttons[tab].tap()
+            let sos = app.buttons["sos.open"]
+            XCTAssertTrue(sos.waitForExistence(timeout: 5))
+            XCTAssertTrue(sos.isHittable, "Le SOS doit être accessible depuis chaque onglet")
+            XCTAssertGreaterThanOrEqual(sos.frame.height, 44)
+            capture(app, name: "Lisibilite-\(tab)-Brume-Sombre")
+            sos.tap()
+            XCTAssertTrue(app.buttons["sos.start"].waitForExistence(timeout: 5))
+            app.buttons["sos.close"].tap()
+        }
     }
 
     func testLargestTextKeepsCheckInAndSOSUsableAfterBackground() throws {

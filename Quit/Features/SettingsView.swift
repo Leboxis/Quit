@@ -39,7 +39,11 @@ struct SettingsView: View {
             Form {
                 Section {
                     NavigationLink { AppearanceSettingsView() } label: {
-                        Label("Apparence et confort", systemImage: "paintpalette")
+                        Label {
+                            Text("Apparence et confort")
+                        } icon: {
+                            Image(systemName: "paintpalette").foregroundStyle(QuitTone.support.color)
+                        }
                     }.accessibilityIdentifier("appearance.open")
                 } header: { Text("Ton espace") }
                 Section("Mon parcours") {
@@ -56,7 +60,7 @@ struct SettingsView: View {
                     Toggle("Verrouiller à l'ouverture", isOn: Binding(get: { store.data.profile.biometricLock }, set: { value in
                         Task { await setLock(value) }
                     })).disabled(busy)
-                    Label("Données sur cet appareil", systemImage: "lock.shield")
+                    Label("Données sur cet appareil", systemImage: "lock.shield").foregroundStyle(QuitTone.reflection.color)
                     Text("Pas de serveur, publicité ni analytics. Le fichier est protégé par iOS et exclu des sauvegardes système. Crée une sauvegarde volontaire avant de supprimer ou de changer de conteneur.")
                         .font(.footnote).foregroundStyle(QuitTheme.secondary)
                 } header: { Text("Confidentialité") } footer: {

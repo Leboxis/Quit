@@ -15,10 +15,10 @@ struct TodayView: View {
 
     var body: some View {
         ScreenContent {
-            Text(Date(), format: .dateTime.weekday(.wide).day().month(.wide))
-                .font(.subheadline).foregroundStyle(QuitTheme.secondary)
-            VStack(alignment: .leading, spacing: 12) {
-                Text("TON ESPACE PERSONNEL · Jour \(journeyDay)")
+            VStack(alignment: .leading, spacing: 8) {
+                Text(Date(), format: .dateTime.weekday(.wide).day().month(.wide))
+                    .font(.subheadline).foregroundStyle(QuitTheme.secondary)
+                Text("Jour \(journeyDay) · À ton rythme")
                     .font(.caption.weight(.medium)).foregroundStyle(accent.color)
                     .fixedSize(horizontal: false, vertical: true)
                 Text(store.data.profile.name.isEmpty ? "Un geste à la fois." : "Bonjour, \(store.data.profile.name).")
@@ -33,10 +33,7 @@ struct TodayView: View {
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
-            .padding(18)
-            .background(LinearGradient(colors: [accent.soft, QuitTheme.background], startPoint: .topLeading, endPoint: .bottomTrailing),
-                        in: RoundedRectangle(cornerRadius: 24, style: .continuous))
-            QuitCard {
+            QuitCard(tinted: true) {
                 HStack {
                     Text(todayCheckIn == nil ? "Comment tu te sens ?" : "Ton check-in du jour").font(.headline)
                         .fixedSize(horizontal: false, vertical: true)
@@ -53,14 +50,14 @@ struct TodayView: View {
                     .accessibilityIdentifier("checkin.open")
             }
             QuitCard {
-                Text("Un geste pour aujourd'hui").font(.headline)
+                QuitSectionTitle(title: "Un geste pour aujourd'hui", symbol: "arrow.triangle.branch", tone: .preparation)
                 if let plan = store.data.plans.last {
                     Text("Si \(plan.condition.lowercased())…").foregroundStyle(QuitTheme.secondary)
                         .fixedSize(horizontal: false, vertical: true)
-                    Text(plan.action).font(.title3.weight(.medium))
+                    Text(plan.action).font(.body.weight(.medium))
                         .fixedSize(horizontal: false, vertical: true)
                 } else {
-                    Text("Pose ton téléphone hors de la chambre ce soir.").font(.title3)
+                    Text("Pose ton téléphone hors de la chambre ce soir.").font(.body.weight(.medium))
                 }
                 NavigationLink { PlansView() } label: {
                     Label("Préparer mes plans", systemImage: "arrow.right").font(.subheadline.weight(.medium))
