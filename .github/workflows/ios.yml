@@ -49,10 +49,27 @@ jobs:
           SIMULATOR_ID: ${{ steps.simulator.outputs.udid }}
         run: |
           set -o pipefail
-          xcodebuild test -project Quit.xcodeproj -scheme Quit -configuration Debug \
-            -destination "platform=iOS Simulator,id=$SIMULATOR_ID" \
-            -derivedDataPath build/Simulator -resultBundlePath build/TestResults.xcresult \
-            -parallel-testing-enabled NO CODE_SIGNING_ALLOWED=NO 2>&1 | tee build-tests.log
+          run_tests() {
+            xcodebuild test -project Quit.xcodeproj -scheme Quit -configuration Debug \
+              -destination "platform=iOS Simulator,id=$SIMULATOR_ID" \
+              -derivedDataPath build/Simulator -resultBundlePath build/TestResults.xcresult \
+              -parallel-testing-enabled NO CODE_SIGNING_ALLOWED=NO 2>&1 | tee build-tests.log
+          }
+          if run_tests; then
+            exit 0
+          fi
+          # GitHub runners intermittently time out loading the simulator Accessibility service,
+          # which aborts the UI test target before a single test runs. Only that flake is retried.
+          if ! grep -q 'Timed out while loading Accessibility' build-tests.log; then
+            echo '::error::XCTest failed for a reason other than the simulator accessibility flake.'
+            exit 1
+          fi
+          echo '::warning::Simulator accessibility timed out; rebooting the simulator and retrying once.'
+          xcrun simctl shutdown all || true
+          xcrun simctl boot "$SIMULATOR_ID" || true
+          xcrun simctl bootstatus "$SIMULATOR_ID" -b
+          rm -rf build/TestResults.xcresult
+          run_tests
       - name: Build unsigned arm64 application for iPhone/iPad
         env:
           QUIT_VERSION: ${{ steps.version.outputs.version }}
@@ -148,11 +165,29 @@ jobs:
           La signature ou la préparation nécessaire est effectuée par votre outil d'installation.
           Quit ne remplace pas un accompagnement professionnel.
           EOF
-          if gh release view "$TAG" >/dev/null 2>&1; then
-            gh release upload "$TAG" build/Quit.ipa build/source.json build/SHA256SUMS.txt --clobber
-          else
-            gh release create "$TAG" build/Quit.ipa build/source.json build/SHA256SUMS.txt \
-              --target "$GITHUB_SHA" --title "Quit $QUIT_VERSION" --notes-file build/release-notes.md --latest=false
-          fi
+          publish_release() {
+            if gh release view "$TAG" >/dev/null 2>&1; then
+              gh release upload "$TAG" build/Quit.ipa build/source.json build/SHA256SUMS.txt --clobber
+            else
+              gh release create "$TAG" build/Quit.ipa build/source.json build/SHA256SUMS.txt \
+                --target "$GITHUB_SHA" --title "Quit $QUIT_VERSION" --notes-file build/release-notes.md --latest=false
+            fi
+          }
+          # GitHub answers a transient "HTTP 403: Resource not accessible by integration" on the
+          # releases API for a short while after a push; retry with backoff instead of going red.
+          for attempt in 1 2 3 4 5 6; do
+            if publish_release; then
+              echo "Release $TAG published on attempt $attempt."
+              exit 0
+            fi
+            if [ "$attempt" -eq 6 ]; then
+              break
+            fi
+            delay=$((attempt * 15))
+            echo "::warning::Release publish attempt $attempt failed; retrying in ${delay}s."
+            sleep "$delay"
+          done
+          echo "::error::Unable to publish release $TAG after 6 attempts."
+          exit 1
       - name: Update SideStore/LiveContainer catalog without triggering main
         run: python3 scripts/publish_catalog.py

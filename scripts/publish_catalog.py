@@ -15,17 +15,26 @@ version = os.environ['QUIT_VERSION']
 tag = f'v{version}'
 
 
+TRANSIENT_HTTP = ('HTTP 403', 'HTTP 429', 'HTTP 500', 'HTTP 502', 'HTTP 503', 'HTTP 504')
+
+
 def api(path, body=None, optional=False):
     command = ['gh', 'api', path]
     if body is not None:
         command += ['--method', 'PUT', '--input', '-']
-    result = subprocess.run(command, input=json.dumps(body) if body is not None else None,
-                            text=True, capture_output=True)
-    if result.returncode:
+    payload = json.dumps(body) if body is not None else None
+    for attempt in range(5):
+        result = subprocess.run(command, input=payload, text=True, capture_output=True)
+        if not result.returncode:
+            return json.loads(result.stdout)
         if optional and 'HTTP 404' in result.stderr:
             return None
+        # GitHub answers transient 403/5xx for a short while after a push to main.
+        if attempt < 4 and any(code in result.stderr for code in TRANSIENT_HTTP):
+            time.sleep(5 * (attempt + 1))
+            continue
         raise RuntimeError(f'GitHub API failed: {result.stderr.strip()}')
-    return json.loads(result.stdout)
+    raise RuntimeError(f'GitHub API failed after retries: {path}')
 
 
 def main():
