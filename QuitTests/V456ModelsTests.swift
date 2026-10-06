@@ -19,9 +19,15 @@ final class V456ModelsTests: XCTestCase {
     }
 
     func testLegacyJSONWithoutNewFieldsDecodes() throws {
-        let legacy = """
-        {"schemaVersion":1,"profile":{"startedAt":946684800,"name":"","intention":"","goal":"stop","sensitiveHour":23,"contactName":"","contactPhone":"","biometricLock":false,"reminderEnabled":false,"reminderHour":21,"reminderMinute":0,"onboardingComplete":false},"checkIns":[],"urges":[],"episodes":[],"plans":[],"completedLessons":[],"reflections":{},"experience":{"accent":"sage","appearance":"system","reduceAnimations":false,"haptics":true,"observationDuration":90}}
-        """.data(using: .utf8)!
+        // Build a real payload, then strip V4/V5/V6 keys: this is exactly what a V1/V2/V3 backup looks like.
+        var data = QuitData()
+        data.profile.intention = "Legacy"
+        let encoded = try JSONEncoder().encode(data)
+        var dict = try XCTUnwrap(JSONSerialization.jsonObject(with: encoded) as? [String: Any])
+        for key in ["favoriteStrategies", "usefulStrategies", "sosPlan", "pace", "weeklyReviews"] {
+            dict.removeValue(forKey: key)
+        }
+        let legacy = try JSONSerialization.data(withJSONObject: dict)
         let decoded = try JSONDecoder().decode(QuitData.self, from: legacy)
         XCTAssertEqual(decoded.favoriteStrategies, [])
         XCTAssertNil(decoded.sosPlan)

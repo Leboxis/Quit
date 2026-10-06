@@ -137,22 +137,25 @@ struct SOSView: View {
             }
             Button("Personnaliser mon SOS") { showPlanEditor = true }.frame(minHeight: 44)
             ForEach(store.suggestions(for: emotion)) { item in
-                Button { strategy = item } label: {
-                    QuitCard(tinted: strategy == item) {
+                QuitCard(tinted: strategy == item) {
+                    Button { strategy = item } label: {
                         HStack {
                             Label(item.title, systemImage: item.symbol).font(.headline)
                             Spacer()
-                            if store.data.favoriteStrategies.contains(item) {
-                                Image(systemName: "star.fill").foregroundStyle(QuitTheme.amber)
-                            }
                             if strategy == item { Image(systemName: "checkmark.circle.fill") }
                         }
                         Text(item.instruction).font(.subheadline).foregroundStyle(QuitTheme.secondary)
+                    }.buttonStyle(.plain).accessibilityAddTraits(strategy == item ? [.isSelected] : [])
+                    HStack {
+                        if store.data.favoriteStrategies.contains(item) {
+                            Image(systemName: "star.fill").foregroundStyle(QuitTheme.amber)
+                        }
+                        Spacer()
                         Button(store.data.favoriteStrategies.contains(item) ? "Retirer des favoris" : "Ajouter aux favoris") {
                             store.toggleFavorite(item)
                         }.font(.footnote).frame(minHeight: 44)
                     }
-                }.buttonStyle(.plain).accessibilityAddTraits(strategy == item ? [.isSelected] : [])
+                }
             }
         }
     }

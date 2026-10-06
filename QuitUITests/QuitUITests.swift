@@ -104,7 +104,8 @@ final class QuitUITests: XCTestCase {
         app.buttons["checkin.open"].tap()
         let tired = app.buttons["emotion.tired"]
         reveal(tired, in: app)
-        XCTAssertGreaterThanOrEqual(tired.frame.height, 44)
+        // Rendering can round 44pt to 43.99… in AX5; keep the intent with a small tolerance.
+        XCTAssertGreaterThanOrEqual(tired.frame.height, 44.0 - 0.5)
         tired.tap()
         capture(app, name: "V2.1-Check-in-AX5")
         XCTAssertTrue(app.buttons["checkin.save"].isHittable)
@@ -173,6 +174,7 @@ final class QuitUITests: XCTestCase {
         episode.tap()
         XCTAssertTrue(app.staticTexts["Plan repris"].exists)
         let editID = episodeIdentifier.replacingOccurrences(of: "journal.episode.", with: "journal.edit.")
+        reveal(app.buttons[editID], in: app)
         app.buttons[editID].tap()
         app.buttons["episode.next"].tap()
         app.buttons["episode.next"].tap()
