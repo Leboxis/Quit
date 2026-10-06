@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct OnboardingView: View {
+    @Environment(\.quitAccent) private var accent
     @Environment(AppStore.self) private var store
     @State private var step = 0
     @State private var name = ""
@@ -12,7 +13,7 @@ struct OnboardingView: View {
         NavigationStack {
             ScreenContent {
                 HStack {
-                    Text("QUIT").font(.caption.weight(.semibold)).tracking(3).foregroundStyle(QuitTheme.accent)
+                    Text("QUIT").font(.caption.weight(.semibold)).tracking(3).foregroundStyle(accent.color)
                     Spacer()
                     Text("\(step + 1) / 3").font(.caption).foregroundStyle(QuitTheme.secondary)
                 }

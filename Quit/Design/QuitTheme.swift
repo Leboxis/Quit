@@ -3,60 +3,89 @@ import SwiftUI
 enum QuitTheme {
     static let background = Color("Background")
     static let surface = Color("Surface")
-    static let accent = Color("AccentColor")
-    static let accentSoft = Color("AccentSoft")
     static let text = Color("TextPrimary")
     static let secondary = Color("TextSecondary")
     static let amber = Color("Amber")
     static let border = Color("Border")
-    static let onAccent = Color("OnAccent")
+}
+
+extension AccentTheme {
+    var color: Color {
+        switch self { case .sage: Color("AccentColor"); case .slate: Color("SlateAccent"); case .sand: Color("SandAccent") }
+    }
+    var soft: Color {
+        switch self { case .sage: Color("AccentSoft"); case .slate: Color("SlateSoft"); case .sand: Color("SandSoft") }
+    }
+    var foreground: Color { Color("OnAccent") }
+}
+
+extension AppAppearance {
+    var colorScheme: ColorScheme? {
+        switch self { case .system: nil; case .light: .light; case .dark: .dark }
+    }
+}
+
+extension EnvironmentValues {
+    @Entry var quitAccent: AccentTheme = .sage
+    @Entry var quitHaptics = true
 }
 
 struct QuitCard<Content: View>: View {
+    @Environment(\.quitAccent) private var accent
+    @Environment(\.colorSchemeContrast) private var contrast
     var tinted = false
     @ViewBuilder var content: Content
     var body: some View {
         VStack(alignment: .leading, spacing: 16) { content }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(22)
-            .background(tinted ? QuitTheme.accentSoft : QuitTheme.surface, in: RoundedRectangle(cornerRadius: 24))
+            .background(tinted ? accent.soft : QuitTheme.surface, in: RoundedRectangle(cornerRadius: 24))
+            .overlay {
+                RoundedRectangle(cornerRadius: 24, style: .continuous)
+                    .stroke(QuitTheme.border.opacity(contrast == .increased ? 1 : 0.45), lineWidth: contrast == .increased ? 1.5 : 0.5)
+            }
     }
 }
 
 struct QuitPrimaryButton: View {
+    @Environment(\.quitAccent) private var accent
     let title: String
     var symbol: String? = nil
     var action: () -> Void
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+    @Environment(\.quitHaptics) private var haptics
+    @State private var feedback = 0
 
     var body: some View {
         if #available(iOS 26, *), !reduceTransparency {
-            button.buttonStyle(.glassProminent).tint(QuitTheme.accent)
+            button.buttonStyle(.glassProminent).tint(accent.color)
         } else {
-            button.buttonStyle(.borderedProminent).tint(QuitTheme.accent)
+            button.buttonStyle(.borderedProminent).tint(accent.color)
         }
     }
 
     private var button: some View {
-        Button(action: action) {
+        Button { feedback += 1; action() } label: {
             HStack(spacing: 10) {
                 if let symbol { Image(systemName: symbol) }
                 Text(title).font(.headline)
             }
-            .foregroundStyle(QuitTheme.onAccent)
+            .foregroundStyle(accent.foreground)
             .frame(maxWidth: .infinity, minHeight: 44)
         }
         .buttonBorderShape(.capsule)
+        .sensoryFeedback(.selection, trigger: feedback) { _, _ in haptics }
     }
 }
 
 struct QuietRow: View {
+    @Environment(\.quitAccent) private var accent
     let title: String
     var detail: String? = nil
     let symbol: String
     var body: some View {
         HStack(spacing: 14) {
-            Image(systemName: symbol).font(.title3).foregroundStyle(QuitTheme.accent)
+            Image(systemName: symbol).font(.title3).foregroundStyle(accent.color)
                 .frame(width: 38, height: 44)
             VStack(alignment: .leading, spacing: 3) {
                 Text(title).font(.headline).foregroundStyle(QuitTheme.text)
@@ -83,10 +112,26 @@ struct ScreenContent<Content: View>: View {
         }
         .background(QuitTheme.background)
         .foregroundStyle(QuitTheme.text)
+        .scrollDismissesKeyboard(.interactively)
+    }
+}
+
+struct QuitBottomBar<Content: View>: View {
+    @ViewBuilder var content: Content
+    var body: some View {
+        VStack(spacing: 10) { content }
+            .frame(maxWidth: 620)
+            .padding(.horizontal, 22).padding(.vertical, 12)
+            .frame(maxWidth: .infinity)
+            .background(QuitTheme.background)
+            .overlay(alignment: .top) { Rectangle().fill(QuitTheme.border.opacity(0.5)).frame(height: 0.5) }
     }
 }
 
 struct EmotionPicker: View {
+    @Environment(\.quitAccent) private var accent
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.quitHaptics) private var haptics
     @Binding var selection: Emotion
     var body: some View {
         LazyVGrid(columns: [GridItem(.adaptive(minimum: 100))], spacing: 10) {
@@ -97,17 +142,20 @@ struct EmotionPicker: View {
                     Label(emotion.title, systemImage: emotion.symbol)
                         .font(.subheadline)
                         .frame(maxWidth: .infinity, minHeight: 44)
-                        .foregroundStyle(selection == emotion ? QuitTheme.onAccent : QuitTheme.text)
-                        .background(selection == emotion ? QuitTheme.accent : QuitTheme.surface, in: Capsule())
+                        .foregroundStyle(selection == emotion ? accent.foreground : QuitTheme.text)
+                        .background(selection == emotion ? accent.color : QuitTheme.surface, in: Capsule())
                 }
                 .buttonStyle(.plain)
                 .accessibilityAddTraits(selection == emotion ? [.isSelected] : [])
             }
         }
+        .animation(reduceMotion ? nil : .easeInOut(duration: 0.18), value: selection)
+        .sensoryFeedback(.selection, trigger: selection) { _, _ in haptics }
     }
 }
 
 struct IntensitySlider: View {
+    @Environment(\.quitAccent) private var accent
     let title: String
     @Binding var value: Double
     var body: some View {
@@ -119,7 +167,7 @@ struct IntensitySlider: View {
                 Text("/ 10").foregroundStyle(QuitTheme.secondary)
             }
             Slider(value: $value, in: 0...10, step: 1) { Text(title) }
-                .tint(QuitTheme.accent)
+                .tint(accent.color)
                 .accessibilityValue("\(Int(value)) sur 10")
             HStack {
                 Text("Faible")
@@ -131,6 +179,7 @@ struct IntensitySlider: View {
 }
 
 struct ContourArtwork: View {
+    @Environment(\.quitAccent) private var accent
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     var animated = false
     var body: some View {
@@ -146,7 +195,7 @@ struct ContourArtwork: View {
                         if point == 0 { path.move(to: CGPoint(x: x, y: y)) }
                         else { path.addLine(to: CGPoint(x: x, y: y)) }
                     }
-                    canvas.stroke(path, with: .color(QuitTheme.accent.opacity(0.12 + Double(line) * 0.035)), lineWidth: 1.2)
+                    canvas.stroke(path, with: .color(accent.color.opacity(0.12 + Double(line) * 0.035)), lineWidth: 1.2)
                 }
             }
         }

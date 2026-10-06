@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct JourneyView: View {
+    @Environment(\.quitAccent) private var accent
     @Environment(AppStore.self) private var store
     var body: some View {
         ScreenContent {
@@ -12,7 +13,7 @@ struct JourneyView: View {
                 QuitCard(tinted: true) {
                     Text("\(store.data.completedLessons.count) / 42").font(.system(.largeTitle, design: .rounded))
                     Text("Exercices explorés").foregroundStyle(QuitTheme.secondary)
-                    ProgressView(value: Double(store.data.completedLessons.count), total: 42).tint(QuitTheme.accent)
+                    ProgressView(value: Double(store.data.completedLessons.count), total: 42).tint(accent.color)
                 }
                 ForEach(1...6, id: \.self) { week in
                     NavigationLink {
@@ -20,7 +21,7 @@ struct JourneyView: View {
                     } label: {
                         QuitCard {
                             HStack(alignment: .top) {
-                                Text(String(format: "%02d", week)).font(.system(.title2, design: .rounded)).foregroundStyle(QuitTheme.accent)
+                                Text(String(format: "%02d", week)).font(.system(.title2, design: .rounded)).foregroundStyle(accent.color)
                                 VStack(alignment: .leading, spacing: 8) {
                                     Text(LessonCatalog.weekTitles[week - 1]).font(.headline)
                                     Text(LessonCatalog.weekDescriptions[week - 1]).font(.subheadline).foregroundStyle(QuitTheme.secondary)

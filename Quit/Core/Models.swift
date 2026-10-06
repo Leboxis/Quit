@@ -163,6 +163,25 @@ struct QuitData: Codable {
     var plans: [IfThenPlan] = []
     var completedLessons: Set<Int> = []
     var reflections: [String: String] = [:]
+    var experience = ExperiencePreferences()
+
+    init() { }
+    private enum CodingKeys: String, CodingKey {
+        case schemaVersion, profile, checkIns, urges, episodes, plans, completedLessons, reflections, experience
+    }
+    init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        schemaVersion = try values.decode(Int.self, forKey: .schemaVersion)
+        profile = try values.decode(UserProfile.self, forKey: .profile)
+        checkIns = try values.decode([DailyCheckIn].self, forKey: .checkIns)
+        urges = try values.decode([UrgeSession].self, forKey: .urges)
+        episodes = try values.decode([Episode].self, forKey: .episodes)
+        plans = try values.decode([IfThenPlan].self, forKey: .plans)
+        completedLessons = try values.decode(Set<Int>.self, forKey: .completedLessons)
+        reflections = try values.decode([String: String].self, forKey: .reflections)
+        // Additive V2 preferences: every V1 record and identifier remains intact.
+        experience = try values.decodeIfPresent(ExperiencePreferences.self, forKey: .experience) ?? ExperiencePreferences()
+    }
 
     func validate() throws {
         let maximumDate = Date().addingTimeInterval(300)

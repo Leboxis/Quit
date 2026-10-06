@@ -2,6 +2,7 @@ import LocalAuthentication
 import SwiftUI
 
 struct RootView: View {
+    @Environment(\.quitAccent) private var accent
     @Environment(AppStore.self) private var store
     @Environment(\.scenePhase) private var phase
     @State private var unlocked = false
@@ -26,7 +27,7 @@ struct RootView: View {
 
             if requiresUnlock || phase != .active {
                 VStack(spacing: 22) {
-                    Image(systemName: "leaf").font(.system(size: 44, weight: .light)).foregroundStyle(QuitTheme.accent)
+                    Image(systemName: "leaf").font(.system(size: 44, weight: .light)).foregroundStyle(accent.color)
                     Text("Quit").font(.largeTitle.weight(.semibold))
                     if phase == .active && requiresUnlock {
                         Text("Ton espace personnel").foregroundStyle(QuitTheme.secondary)
@@ -64,6 +65,7 @@ struct RootView: View {
 }
 
 struct AppTabs: View {
+    @Environment(\.quitAccent) private var accent
     @State private var selection = 0
     @State private var showSOS = false
     @State private var showSettings = false
@@ -109,7 +111,7 @@ struct AppTabs: View {
                 Spacer()
                 Image(systemName: "arrow.up.right").font(.subheadline)
             }
-            .foregroundStyle(QuitTheme.accent)
+            .foregroundStyle(accent.color)
             .padding(.horizontal, 20).frame(minHeight: 48)
             .contentShape(Rectangle())
         }

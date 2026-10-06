@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct TodayView: View {
+    @Environment(\.quitAccent) private var accent
     @Environment(AppStore.self) private var store
     @State private var showCheckIn = false
     @State private var showEpisode = false
@@ -16,12 +17,19 @@ struct TodayView: View {
         ScreenContent {
             Text(Date(), format: .dateTime.weekday(.wide).day().month(.wide))
                 .font(.subheadline).foregroundStyle(QuitTheme.secondary)
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 16) {
+                HStack {
+                    Text("TON ESPACE PERSONNEL").font(.caption.weight(.medium)).tracking(1.2)
+                    Spacer()
+                    Text("Jour \(journeyDay)").font(.caption.weight(.medium)).monospacedDigit()
+                }.foregroundStyle(accent.color)
                 Text(store.data.profile.name.isEmpty ? "Un geste à la fois." : "Bonjour, \(store.data.profile.name).")
                     .font(.title2.weight(.medium))
-                Text("Jour \(journeyDay) de ton parcours").font(.footnote).foregroundStyle(QuitTheme.secondary)
+                ContourArtwork().frame(height: 72)
             }
-            ContourArtwork().frame(height: 90)
+            .padding(22)
+            .background(LinearGradient(colors: [accent.soft, QuitTheme.background], startPoint: .topLeading, endPoint: .bottomTrailing),
+                        in: RoundedRectangle(cornerRadius: 28, style: .continuous))
             QuitCard(tinted: true) {
                 Label("Ton intention", systemImage: "leaf").font(.headline)
                 Text(store.data.profile.intention.isEmpty ? "Retrouver de la liberté dans mes choix." : "« \(store.data.profile.intention) »")
@@ -31,7 +39,7 @@ struct TodayView: View {
                 HStack {
                     Text(todayCheckIn == nil ? "Comment tu te sens ?" : "Ton check-in du jour").font(.headline)
                     Spacer()
-                    if todayCheckIn != nil { Image(systemName: "checkmark.circle.fill").foregroundStyle(QuitTheme.accent) }
+                    if todayCheckIn != nil { Image(systemName: "checkmark.circle.fill").foregroundStyle(accent.color) }
                 }
                 if let checkIn = todayCheckIn {
                     Text("\(checkIn.emotion.title) · Envie \(checkIn.urge)/10").foregroundStyle(QuitTheme.secondary)

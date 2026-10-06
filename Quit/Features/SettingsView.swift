@@ -32,6 +32,11 @@ struct SettingsView: View {
     var body: some View {
         NavigationStack {
             Form {
+                Section {
+                    NavigationLink { AppearanceSettingsView() } label: {
+                        Label("Apparence et confort", systemImage: "paintpalette")
+                    }.accessibilityIdentifier("appearance.open")
+                } header: { Text("Ton espace") }
                 Section("Mon parcours") {
                     TextField("Prénom ou pseudonyme", text: $name)
                         .onChange(of: name) { _, value in name = String(value.prefix(100)) }
@@ -84,7 +89,7 @@ struct SettingsView: View {
             }
             .scrollContentBackground(.hidden).background(QuitTheme.background)
             .navigationTitle("Réglages").navigationBarTitleDisplayMode(.inline)
-            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Terminé") { dismiss() } } }
+            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Terminé") { dismiss() }.accessibilityIdentifier("settings.done") } }
             .onAppear {
                 name = store.data.profile.name
                 intention = store.data.profile.intention

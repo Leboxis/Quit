@@ -1,7 +1,8 @@
 import SwiftUI
 
 struct SOSView: View {
-    private enum Step: Int { case intensity, pause, observe, choose, reassess, done }
+    @Environment(\.quitAccent) private var accent
+    private enum Step: Int, Hashable { case intensity, pause, observe, choose, reassess, done }
     @Environment(AppStore.self) private var store
     @Environment(\.dismiss) private var dismiss
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -13,6 +14,7 @@ struct SOSView: View {
     @State private var outcome: UrgeOutcome = .ongoing
     @State private var deadline = Date()
     @State private var remaining = 90
+    @State private var duration: ObservationDuration = .ninetySeconds
     @State private var closeConfirmation = false
     @State private var showEpisode = false
     @State private var savedEpisodeID: UUID?
@@ -21,7 +23,13 @@ struct SOSView: View {
     var body: some View {
         NavigationStack {
             ScreenContent {
-                Text("À TON RYTHME").font(.caption.weight(.medium)).tracking(2).foregroundStyle(QuitTheme.secondary)
+                HStack {
+                    Text("À TON RYTHME").tracking(1.5)
+                    Spacer()
+                    Text("\(step.rawValue + 1) / 6").monospacedDigit()
+                }.font(.caption.weight(.medium)).foregroundStyle(QuitTheme.secondary)
+                ProgressView(value: Double(step.rawValue + 1), total: 6).tint(accent.color)
+                    .accessibilityLabel("Étape du SOS").accessibilityValue("\(step.rawValue + 1) sur 6")
                 switch step {
                 case .intensity: intensityStep
                 case .pause: pauseStep
@@ -31,6 +39,8 @@ struct SOSView: View {
                 case .done: doneStep
                 }
             }
+            .id(step).transition(.opacity)
+            .safeAreaInset(edge: .bottom) { QuitBottomBar { stepControls } }
             .navigationTitle("On la traverse").navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -46,6 +56,7 @@ struct SOSView: View {
             } message: { Text("Tu peux revenir quand tu veux. Aucun résultat ne sera déduit de cette session.") }
             .sheet(isPresented: $showEpisode) { EpisodeView(existingID: savedEpisodeID) }
         }
+        .onAppear { if step == .intensity { duration = store.data.experience.observationDuration } }
         .task(id: "\(step.rawValue)-\(deadline.timeIntervalSinceReferenceDate)") {
             guard step == .observe else { return }
             while !Task.isCancelled && remaining > 0 {
@@ -53,7 +64,6 @@ struct SOSView: View {
                 do { try await Task.sleep(for: .seconds(1)) } catch { return }
             }
         }
-        .sensoryFeedback(.selection, trigger: step.rawValue)
     }
 
     private var intensityStep: some View {
@@ -61,29 +71,22 @@ struct SOSView: View {
             Text("Une envie n'est\npas un ordre.").font(.largeTitle.weight(.semibold))
             Text("On peut créer un peu d'espace avant le prochain geste.").foregroundStyle(QuitTheme.secondary)
             QuitCard { IntensitySlider(title: "Intensité de l'envie", value: $initial) }
+            Picker("Temps d'observation", selection: $duration) {
+                ForEach(ObservationDuration.allCases) { Text($0.title).tag($0) }
+            }.pickerStyle(.segmented).accessibilityIdentifier("sos.duration")
             Text("Juste avant, tu te sentais…").font(.headline)
             EmotionPicker(selection: $emotion)
-            QuitPrimaryButton(title: "Créer une pause", symbol: "pause") {
-                sessionDate = Date()
-                final = initial
-                go(.pause)
-            }.accessibilityIdentifier("sos.start")
         }
     }
 
     private var pauseStep: some View {
         VStack(alignment: .leading, spacing: 26) {
-            Image(systemName: "door.left.hand.open").font(.system(size: 48, weight: .light)).foregroundStyle(QuitTheme.accent)
+            Image(systemName: "door.left.hand.open").font(.system(size: 48, weight: .light)).foregroundStyle(accent.color)
             Text("Change le décor.").font(.largeTitle.weight(.semibold))
             QuitCard(tinted: true) {
                 Text("Pose le téléphone.").font(.title2.weight(.medium))
                 Text("Si tu peux, lève-toi et change de pièce. Tu n'as rien à résoudre pour l'instant.").foregroundStyle(QuitTheme.secondary)
             }
-            QuitPrimaryButton(title: "C'est fait") {
-                remaining = 90
-                deadline = Date().addingTimeInterval(90)
-                go(.observe)
-            }.accessibilityIdentifier("sos.pause.done")
             Button("Je préfère passer à une action") { go(.choose) }.frame(minHeight: 44)
         }
     }
@@ -91,26 +94,20 @@ struct SOSView: View {
     private var observeStep: some View {
         VStack(alignment: .leading, spacing: 24) {
             Text("Laisse passer\nla vague.").font(.largeTitle.weight(.semibold))
-            ContourArtwork(animated: true).frame(height: 160)
-            Text(String(format: "%02d:%02d", remaining / 60, remaining % 60))
-                .font(.system(size: 50, weight: .medium, design: .rounded)).monospacedDigit()
-                .foregroundStyle(QuitTheme.accent)
-                .accessibilityLabel("Temps restant").accessibilityValue("\(remaining) secondes")
+            ObservationDial(remaining: remaining, total: duration.seconds)
             Text("Respire naturellement. Remarque les sensations, les pensées et leurs changements. Tu peux choisir de ne pas agir, même si l'envie reste présente.")
                 .foregroundStyle(QuitTheme.secondary)
             QuitCard(tinted: true) {
                 Text("Prendre de la distance").font(.headline)
                 Text("« Je remarque que mon esprit me propose de regarder. »")
             }
-            QuitPrimaryButton(title: remaining > 0 ? "Choisir mon prochain geste" : "Continuer", symbol: "arrow.right") { go(.choose) }
-                .accessibilityIdentifier("sos.observe.next")
             if remaining == 0 {
-                Button("Observer encore 90 secondes") {
-                    remaining = 90
-                    deadline = Date().addingTimeInterval(90)
+                Button("Observer encore \(duration.title)") {
+                    remaining = duration.seconds
+                    deadline = Date().addingTimeInterval(Double(duration.seconds))
                 }.frame(minHeight: 44)
             }
-            Text("L'envie ne redescend pas toujours en 90 secondes. Ce temps est un repère, pas une promesse.")
+            Text("Tu peux passer à une action à tout moment. Ce temps est un repère, pas une promesse de faire disparaître l'envie.")
                 .font(.footnote).foregroundStyle(QuitTheme.secondary)
         }
     }
@@ -131,8 +128,6 @@ struct SOSView: View {
                     }
                 }.buttonStyle(.plain).accessibilityAddTraits(strategy == item ? [.isSelected] : [])
             }
-            QuitPrimaryButton(title: "J'ai essayé, faire le point") { go(.reassess) }
-                .accessibilityIdentifier("sos.action.done")
         }
     }
 
@@ -148,18 +143,16 @@ struct SOSView: View {
                             Spacer()
                             Image(systemName: outcome == item ? "checkmark.circle.fill" : "circle")
                         }.padding(16).frame(minHeight: 44)
-                            .background(outcome == item ? QuitTheme.accentSoft : QuitTheme.surface, in: RoundedRectangle(cornerRadius: 18))
+                            .background(outcome == item ? accent.soft : QuitTheme.surface, in: RoundedRectangle(cornerRadius: 18))
                     }.buttonStyle(.plain).accessibilityAddTraits(outcome == item ? [.isSelected] : [])
                 }
             }
-            QuitPrimaryButton(title: "Enregistrer mon expérience", symbol: "checkmark") { save() }
-                .accessibilityIdentifier("sos.save")
         }
     }
 
     private var doneStep: some View {
         VStack(alignment: .leading, spacing: 26) {
-            Image(systemName: outcome == .passed ? "leaf" : "arrow.uturn.forward").font(.system(size: 46, weight: .light)).foregroundStyle(QuitTheme.accent)
+            Image(systemName: outcome == .passed ? "leaf" : "arrow.uturn.forward").font(.system(size: 46, weight: .light)).foregroundStyle(accent.color)
             Text(outcome == .passed ? "Tu as créé\nun espace." : "Ton parcours\ncontinue.").font(.largeTitle.weight(.semibold))
             QuitCard(tinted: true) {
                 Text("\(Int(initial)) → \(Int(final))").font(.system(.largeTitle, design: .rounded))
@@ -173,7 +166,32 @@ struct SOSView: View {
                 QuitPrimaryButton(title: "Essayer un autre geste") { dismiss() }
                 Text("Le bouton SOS reste disponible dès ton retour.").font(.footnote).foregroundStyle(QuitTheme.secondary)
             }
-            Button("Revenir à mon parcours") { dismiss() }.frame(minHeight: 44)
+        }
+    }
+
+    @ViewBuilder private var stepControls: some View {
+        switch step {
+        case .intensity:
+            QuitPrimaryButton(title: "Créer une pause", symbol: "pause") {
+                sessionDate = Date(); final = initial; go(.pause)
+            }.accessibilityIdentifier("sos.start")
+        case .pause:
+            QuitPrimaryButton(title: "C'est fait") {
+                remaining = duration.seconds
+                deadline = Date().addingTimeInterval(Double(duration.seconds))
+                go(.observe)
+            }.accessibilityIdentifier("sos.pause.done")
+        case .observe:
+            QuitPrimaryButton(title: remaining > 0 ? "Choisir mon prochain geste" : "Continuer", symbol: "arrow.right") { go(.choose) }
+                .accessibilityIdentifier("sos.observe.next")
+        case .choose:
+            QuitPrimaryButton(title: "J'ai essayé, faire le point") { go(.reassess) }
+                .accessibilityIdentifier("sos.action.done")
+        case .reassess:
+            QuitPrimaryButton(title: "Enregistrer mon expérience", symbol: "checkmark") { save() }
+                .accessibilityIdentifier("sos.save")
+        case .done:
+            QuitPrimaryButton(title: "Revenir à mon parcours") { dismiss() }
                 .accessibilityIdentifier("sos.finish")
         }
     }
@@ -181,7 +199,7 @@ struct SOSView: View {
     private func go(_ next: Step) {
         if next == .choose { strategy = store.suggestions(for: emotion).first ?? .move }
         if reduceMotion { step = next }
-        else { withAnimation(.easeInOut(duration: 0.2)) { step = next } }
+        else { withAnimation(.easeInOut(duration: 0.28)) { step = next } }
     }
 
     private func save() {
@@ -195,5 +213,33 @@ struct SOSView: View {
             savedEpisodeID = episode?.id
             go(.done)
         }
+    }
+}
+
+private struct ObservationDial: View {
+    let remaining: Int
+    let total: Int
+    @Environment(\.quitAccent) private var accent
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        ZStack {
+            ContourArtwork(animated: remaining > 0).opacity(0.35)
+            Circle().fill(accent.soft).frame(width: 184, height: 184)
+            Circle().stroke(accent.color.opacity(0.14), lineWidth: 3).frame(width: 188, height: 188)
+            Circle().trim(from: 0, to: min(1, max(0, Double(remaining) / Double(total))))
+                .stroke(accent.color, style: StrokeStyle(lineWidth: 3, lineCap: .round))
+                .rotationEffect(.degrees(-90)).frame(width: 188, height: 188)
+                .animation(reduceMotion ? nil : .linear(duration: 0.6), value: remaining)
+            VStack(spacing: 6) {
+                Text(String(format: "%02d:%02d", remaining / 60, remaining % 60))
+                    .font(.system(.largeTitle, design: .rounded, weight: .medium)).monospacedDigit()
+                Text("Observe, simplement.").font(.caption).foregroundStyle(QuitTheme.secondary)
+            }.foregroundStyle(accent.color)
+        }
+        .frame(height: 206)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Temps d'observation restant").accessibilityValue("\(remaining) secondes")
+        .accessibilityIdentifier("sos.timer")
     }
 }

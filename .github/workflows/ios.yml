@@ -38,7 +38,7 @@ jobs:
         run: brew install xcodegen
       - name: Set a monotonically increasing app version
         id: version
-        run: echo "version=0.1.${GITHUB_RUN_NUMBER}" >> "$GITHUB_OUTPUT"
+        run: echo "version=0.2.${GITHUB_RUN_NUMBER}" >> "$GITHUB_OUTPUT"
       - name: Generate Xcode project
         run: xcodegen generate
       - name: Start available iPhone Simulator
@@ -129,7 +129,9 @@ jobs:
           Quit $QUIT_VERSION · build automatique du commit $GITHUB_SHA.
 
           IPA arm64 non signé pour SideStore ou LiveContainer. iOS 18 minimum.
-          Check-in, SOS, journal, 42 exercices, statistiques locales et plans Si → Alors.
+          V2 : ambiances Sauge, Brume et Sable, mode clair/sombre, réglages de confort.
+          SOS avec 90 s, 3 ou 5 min, progression et commandes toujours accessibles.
+          Données et sauvegardes V1 conservées. Check-in, journal, 42 exercices et progrès privés.
           Aucun certificat, profil de provisioning ni extension Screen Time inclus.
 
           Source de mises à jour : https://raw.githubusercontent.com/$GITHUB_REPOSITORY/catalog/source.json

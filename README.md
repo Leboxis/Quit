@@ -12,14 +12,22 @@ Un compagnon iOS privé pour changer son usage de pornographie, construit en **S
 https://raw.githubusercontent.com/Leboxis/Quit/catalog/source.json
 ```
 
-Ces liens deviennent actifs après le premier workflow réussi. L'IPA est **non signé**, arm64, pour iOS 18 et versions suivantes. SideStore le signe avec votre méthode habituelle ; LiveContainer le prépare selon son mode de fonctionnement. Quit conserve un identifiant stable (`fr.leboxis.quit`) pour les mises à jour. Faites un export volontaire avant un changement de conteneur.
+L'IPA est **non signé**, arm64, pour iOS 18 et versions suivantes. SideStore le signe avec votre méthode habituelle ; LiveContainer le prépare selon son mode de fonctionnement. Quit conserve un identifiant stable (`fr.leboxis.quit`) pour les mises à jour. Faites un export volontaire avant un changement de conteneur.
+
+## V2 · Design et confort
+
+Trois ambiances cohérentes dans toute l'app : **Sauge**, **Brume**, **Sable**. Apparence automatique, claire ou sombre ; aperçu immédiat depuis Réglages → Apparence et confort. Choix des vibrations et des animations, avec priorité au réglage d'accessibilité iOS. Les contrastes des cartes sont renforcés lorsque l'appareil le demande.
+
+Le SOS offre 90 secondes, 3 ou 5 minutes, un cadran discret et une progression lisible. Ses commandes et l'enregistrement du check-in restent accessibles dans une barre inférieure, indépendamment du défilement. L'accueil gagne une carte de bienvenue douce et les choix d'émotion une transition courte.
+
+Les préférences sont conservées localement, exportées avec la sauvegarde et réappliquées au lancement. **Les données et exports V1 restent compatibles**, sans nouvelle inscription ni remise à zéro du parcours.
 
 ## Ce que contient l'app
 
 | Espace | Contenu |
 | --- | --- |
 | Aujourd'hui | Intention personnelle, check-in court, un geste utile |
-| SOS permanent | Pause, observation de 90 s adaptable, action, réévaluation |
+| SOS permanent | Pause, observation de 90 s, 3 ou 5 min, action, réévaluation |
 | Parcours | 42 micro-exercices originaux sur six semaines, à son rythme |
 | Comprendre | Jours connus/inconnus, intensités, stratégies, moments sensibles, retour au plan |
 | Aide | Plans Si → Alors, contact choisi, ressources professionnelles et sources |
@@ -29,9 +37,9 @@ Un écart ne remet pas les apprentissages à zéro. Aucun jour sans saisie n'est
 
 ## Design iOS 27
 
-[Figma : écrans éditables et prototype](https://www.figma.com/design/5wrVQf5TcnIVAJmnLN8ePs)
+[Figma : écrans éditables et prototype](https://www.figma.com/design/5wrVQf5TcnIVAJmnLN8ePs?node-id=14-232)
 
-TabView, NavigationStack et contrôles SwiftUI natifs ; Liquid Glass pour les commandes sur iOS 26/27, alternative matérielle pour iOS 18/19. SF Pro, Dynamic Type, VoiceOver, mode sombre et Réduire les animations/transparences. Le look système évolue avec iOS ; aucune barre d'onglets n'est redessinée dans l'app. La CI sélectionne Xcode 27 s'il est présent sur le runner, sinon elle déclare son repli Xcode 26 dans le résumé.
+TabView, NavigationStack et contrôles SwiftUI natifs ; Liquid Glass pour les commandes sur iOS 26/27, alternative matérielle pour iOS 18 et versions antérieures à iOS 26. SF Pro, Dynamic Type, VoiceOver, mode sombre et Réduire les animations/transparences. Le look système évolue avec iOS ; aucune barre d'onglets n'est redessinée dans l'app. La CI sélectionne Xcode 27 s'il est présent sur le runner, sinon elle déclare son repli Xcode 26 dans le résumé.
 
 Les maquettes Figma utilisent Inter pour la prévisualisation : le connecteur annonce SF Pro mais ses calques restent marqués `hasMissingFont` et ne se rendent pas. L'app utilise la police système SF Pro. L'import de la bibliothèque Apple iOS 27 est également refusé par le connecteur ; les composants Figma sont locaux et éditables.
 
@@ -60,7 +68,7 @@ xcodebuild test -project Quit.xcodeproj -scheme Quit -destination 'platform=iOS 
 
 ## Publication automatique
 
-Chaque **push sur main** exécute validation du catalogue, tests XCTest et parcours UI, compilation pour appareil et contrôle des signatures. La release `v0.1.<run_number>` contient `Quit.ipa`, `source.json` et `SHA256SUMS.txt`. Version du catalogue, identifiant, iOS minimum et poids sont lus dans l'IPA réel. Les 30 versions les plus récentes sont conservées dans la source.
+Chaque **push sur main** exécute validation du catalogue, tests XCTest et parcours UI, compilation pour appareil et contrôle des signatures. La release `v0.2.<run_number>` contient `Quit.ipa`, `source.json` et `SHA256SUMS.txt`. Version du catalogue, identifiant, iOS minimum et poids sont lus dans l'IPA réel. Les 30 versions les plus récentes sont conservées dans la source.
 
 La branche `catalog` porte `source.json` et ne déclenche pas le workflow. Les builds historiques produisent leur release ; seul le commit encore en tête de main actualise le catalogue. Un échec de build laisse la dernière version publiée disponible. Les pull requests sont testées et ne publient pas de release. La relance d'un workflow conserve sa version et remplace ses assets.
 

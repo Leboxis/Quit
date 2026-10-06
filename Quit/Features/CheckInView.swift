@@ -38,11 +38,15 @@ struct CheckInView: View {
                     Text("Une réponse incertaine reste un jour sans bilan. Tu peux la modifier plus tard.")
                         .font(.footnote).foregroundStyle(QuitTheme.secondary)
                 }
-                QuitPrimaryButton(title: "Enregistrer", symbol: "checkmark") {
-                    let item = DailyCheckIn(date: Date(), emotion: emotion, energy: energy, stress: stress,
-                                            urge: Int(urge), aligned: alignment == 0 ? nil : alignment == 1)
-                    if store.saveCheckIn(item) { dismiss() }
-                }.accessibilityIdentifier("checkin.save")
+            }
+            .safeAreaInset(edge: .bottom) {
+                QuitBottomBar {
+                    QuitPrimaryButton(title: "Enregistrer", symbol: "checkmark") {
+                        let item = DailyCheckIn(date: Date(), emotion: emotion, energy: energy, stress: stress,
+                                                urge: Int(urge), aligned: alignment == 0 ? nil : alignment == 1)
+                        if store.saveCheckIn(item) { dismiss() }
+                    }.accessibilityIdentifier("checkin.save")
+                }
             }
             .navigationTitle("Comment ça va ?").navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Fermer") { dismiss() } } }

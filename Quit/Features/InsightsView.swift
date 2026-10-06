@@ -2,6 +2,7 @@ import Charts
 import SwiftUI
 
 struct InsightsView: View {
+    @Environment(\.quitAccent) private var accent
     @Environment(AppStore.self) private var store
     var body: some View {
         let stats = ProgressSnapshot(data: store.data)
@@ -51,7 +52,7 @@ struct InsightsView: View {
                 }
             }
             HStack {
-                legend("Aligné", color: QuitTheme.accent)
+                legend("Aligné", color: accent.color)
                 legend("Épisode", color: QuitTheme.amber)
                 legend("Sans bilan", color: QuitTheme.border)
             }.font(.caption)
@@ -63,7 +64,7 @@ struct InsightsView: View {
     private func urgeOverview(_ stats: ProgressSnapshot) -> some View {
         QuitCard {
             Text("\(stats.passedUrges) envies traversées").font(.title2.weight(.medium))
-            Text("Sur \(stats.urges.count) sessions enregistrées. Les sessions encore en cours ne comptent pas comme traversées.")
+            Text("Sur \(stats.urges.count) \(stats.urges.count == 1 ? "session enregistrée" : "sessions enregistrées"). Les sessions encore en cours ne comptent pas comme traversées.")
                 .font(.footnote).foregroundStyle(QuitTheme.secondary)
             Chart(Array(stats.urges.suffix(30))) { session in
                 LineMark(x: .value("Date", session.date), y: .value("Intensité", session.initial), series: .value("Mesure", "Avant"))
@@ -71,10 +72,10 @@ struct InsightsView: View {
                 LineMark(x: .value("Date", session.date), y: .value("Intensité", session.final), series: .value("Mesure", "Après"))
                     .foregroundStyle(by: .value("Mesure", "Après"))
                 PointMark(x: .value("Date", session.date), y: .value("Intensité", session.final))
-                    .foregroundStyle(QuitTheme.accent)
+                    .foregroundStyle(accent.color)
             }
             .chartYScale(domain: 0...10)
-            .chartForegroundStyleScale(["Avant": QuitTheme.amber, "Après": QuitTheme.accent])
+            .chartForegroundStyleScale(["Avant": QuitTheme.amber, "Après": accent.color])
             .chartXAxis { AxisMarks(values: .automatic(desiredCount: 3)) { AxisValueLabel(format: .dateTime.day().month()) } }
             .frame(height: 170)
             .accessibilityLabel("Intensité des 30 dernières envies, avant et après une action")
@@ -117,7 +118,7 @@ struct InsightsView: View {
     }
 
     private func dayColor(_ state: DayRecord.State) -> Color {
-        switch state { case .aligned: QuitTheme.accent; case .episode: QuitTheme.amber.opacity(0.5); case .unknown: QuitTheme.border }
+        switch state { case .aligned: accent.color; case .episode: QuitTheme.amber.opacity(0.5); case .unknown: QuitTheme.border }
     }
     private func dayLabel(_ state: DayRecord.State) -> String {
         switch state { case .aligned: "Aligné"; case .episode: "Écart ou objectif non atteint"; case .unknown: "Sans bilan" }
@@ -128,6 +129,7 @@ struct InsightsView: View {
 }
 
 struct HeatmapView: View {
+    @Environment(\.quitAccent) private var accent
     let cells: [HeatCell]
     private let weekdays = [2, 3, 4, 5, 6, 7, 1]
     private let labels = ["L", "M", "M", "J", "V", "S", "D"]
@@ -146,7 +148,7 @@ struct HeatmapView: View {
                         ForEach(weekdays, id: \.self) { weekday in
                             let count = cells.first { $0.weekday == weekday && $0.bucket == bucket }?.count ?? 0
                             RoundedRectangle(cornerRadius: 5)
-                                .fill(count == 0 ? QuitTheme.accentSoft : QuitTheme.accent.opacity(min(1, 0.25 + Double(count) * 0.15)))
+                                .fill(count == 0 ? accent.soft : accent.color.opacity(min(1, 0.25 + Double(count) * 0.15)))
                                 .frame(minWidth: 16, maxWidth: .infinity, minHeight: 22)
                                 .accessibilityLabel("\(Calendar.current.weekdaySymbols[weekday - 1]), \(buckets[bucket]) : \(count) signaux")
                         }
