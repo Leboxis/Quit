@@ -62,6 +62,35 @@ class DistributionTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.module.make_source(self.ipa(CFBundleIdentifier='different.app'), 'Leboxis/Quit', 'v0.1.42', '2026-10-05')
 
+    def test_packaged_app_uses_portable_zip_paths(self):
+        app = self.root / 'Quit.app'
+        app.mkdir()
+        with zipfile.ZipFile(self.ipa()) as archive:
+            (app / 'Info.plist').write_bytes(archive.read('Payload/Quit.app/Info.plist'))
+        (app / 'Quit').write_bytes(b'fake mach-o')
+        output = self.root / 'packaged.ipa'
+        self.module.package_app(app, output)
+        with zipfile.ZipFile(output) as archive:
+            self.assertIn('Payload/Quit.app/Quit', archive.namelist())
+            self.assertTrue(all('\\' not in name for name in archive.namelist()))
+
+    def test_rejects_unsafe_archive_paths(self):
+        for path in ('../outside', '/outside', 'Payload/../outside', 'Payload\\Quit.app\\extra'):
+            with self.subTest(path=path):
+                ipa = self.ipa()
+                with zipfile.ZipFile(ipa, 'a') as archive:
+                    member = zipfile.ZipInfo(path)
+                    # ZipInfo normalizes Windows separators at construction; preserve
+                    # the malformed archive name so the reader, not the writer, is tested.
+                    member.filename = path
+                    archive.writestr(member, b'unsafe')
+                with self.assertRaisesRegex(ValueError, 'Unsafe archive path'):
+                    self.module.inspect_ipa(ipa)
+
+    def test_rejects_executable_path_instead_of_filename(self):
+        with self.assertRaisesRegex(ValueError, 'Invalid app executable'):
+            self.module.inspect_ipa(self.ipa(CFBundleExecutable='../Quit'))
+
     def test_version_history_is_newest_first_and_deduplicated(self):
         old = self.module.make_source(self.ipa(), 'Leboxis/Quit', 'v0.1.42', '2026-10-05')
         newest = self.module.make_source(self.ipa(CFBundleShortVersionString='0.1.43', CFBundleVersion='43'),

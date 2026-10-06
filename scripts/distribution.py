@@ -4,7 +4,7 @@ import argparse
 from datetime import date
 import hashlib
 import json
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 import plistlib
 import struct
 import zipfile
@@ -35,25 +35,30 @@ def _has_macho_signature(data):
 
 def inspect_ipa(ipa):
     with zipfile.ZipFile(ipa) as archive:
-        names = archive.namelist()
+        # ZIP paths are POSIX on every host. Inspect the original spelling before
+        # ZipInfo's Windows normalization can conceal malformed separators.
+        names = [member.orig_filename for member in archive.infolist()]
         if len(names) != len(set(names)):
             raise ValueError('Duplicate paths inside IPA')
-        if archive.testzip() is not None:
-            raise ValueError('Corrupt ZIP member')
         for name in names:
-            if name.startswith('/') or '..' in Path(name).parts:
+            if name.startswith('/') or '\\' in name or '..' in PurePosixPath(name).parts:
                 raise ValueError('Unsafe archive path')
-            if '_CodeSignature' in Path(name).parts or name.endswith('embedded.mobileprovision'):
+            if '_CodeSignature' in PurePosixPath(name).parts or name.endswith('embedded.mobileprovision'):
                 raise ValueError('Signed/provisioned bundle is not allowed')
             if '.appex/' in name or '/PlugIns/' in name:
                 raise ValueError('Extensions are not supported by this LiveContainer build')
-        infos = [n for n in names if n.startswith('Payload/') and n.endswith('.app/Info.plist') and len(Path(n).parts) == 3]
+        if archive.testzip() is not None:
+            raise ValueError('Corrupt ZIP member')
+        infos = [n for n in names if n.startswith('Payload/') and n.endswith('.app/Info.plist') and len(PurePosixPath(n).parts) == 3]
         if len(infos) != 1:
             raise ValueError('IPA must contain exactly one application')
         info = plistlib.loads(archive.read(infos[0]))
         if info.get('CFBundleIdentifier') != BUNDLE_ID or info.get('CFBundlePackageType') != 'APPL':
             raise ValueError('Unexpected bundle identity')
-        executable = str(Path(infos[0]).parent / info['CFBundleExecutable'])
+        executable_name = info.get('CFBundleExecutable')
+        if not isinstance(executable_name, str) or not executable_name or executable_name in ('.', '..') or '/' in executable_name or '\\' in executable_name:
+            raise ValueError('Invalid app executable')
+        executable = str(PurePosixPath(infos[0]).parent / executable_name)
         if executable not in names:
             raise ValueError('Missing app executable')
         for name in names:
@@ -74,7 +79,7 @@ def package_app(app, output):
     with zipfile.ZipFile(output, 'w', compression=zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
         for file in sorted(app.rglob('*')):
             if file.is_file():
-                archive.write(file, Path('Payload') / app.name / file.relative_to(app))
+                archive.write(file, str(PurePosixPath('Payload') / app.name / file.relative_to(app).as_posix()))
     return inspect_ipa(output)
 
 
