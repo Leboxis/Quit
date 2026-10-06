@@ -56,10 +56,13 @@ struct InsightsView: View {
             }
             QuitCard {
                 QuitSectionTitle(title: "Mon historique", symbol: "book.closed", tone: .reflection)
-                if let hours = stats.averageRecoveryHours {
+                if let hours = stats.averageRecoveryHours, let median = stats.medianRecoveryHours {
                     Text("\(hours.formatted(.number.precision(.fractionLength(1)))) h en moyenne")
                         .font(.title2.weight(.medium))
-                    Text("Retour au plan · \(stats.episodes.filter { $0.recoveredAt != nil }.count) retours")
+                    Text("Retour au plan · \(stats.recoveryCount) retours · médiane \(median.formatted(.number.precision(.fractionLength(1)))) h")
+                        .font(.footnote).foregroundStyle(QuitTheme.secondary)
+                } else {
+                    Text("Note ton retour au plan après un épisode pour voir ton temps de reprise.")
                         .font(.footnote).foregroundStyle(QuitTheme.secondary)
                 }
                 NavigationLink { CheckInCalendarView() } label: {
