@@ -142,8 +142,28 @@ final class AppStore {
     func suggestions(for emotion: Emotion) -> [Strategy] {
         let defaults: [Strategy] = emotion == .lonely ? [.connect, .move, .walk] : [.move, .walk, .connect]
         let proven = ProgressSnapshot(data: data).strategies.filter { $0.count >= 3 && $0.reduction > 0 }.map(\.strategy)
-        return Array((proven + defaults).reduce(into: [Strategy]()) { result, strategy in
+        // Jev A : favoris d'abord, puis utiles explicites, puis prouvées auto, puis défauts.
+        let ordered = data.favoriteStrategies + data.usefulStrategies + proven + defaults
+        return Array(ordered.reduce(into: [Strategy]()) { result, strategy in
             if !result.contains(strategy) { result.append(strategy) }
         }.prefix(3))
+    }
+
+    func toggleFavorite(_ strategy: Strategy) {
+        _ = update { data in
+            if data.favoriteStrategies.contains(strategy) {
+                data.favoriteStrategies.removeAll { $0 == strategy }
+            } else if data.favoriteStrategies.count < 3 {
+                data.favoriteStrategies.append(strategy)
+            }
+        }
+    }
+
+    func markUseful(_ strategy: Strategy) {
+        _ = update { data in
+            if !data.usefulStrategies.contains(strategy) && data.usefulStrategies.count < 4 {
+                data.usefulStrategies.append(strategy)
+            }
+        }
     }
 }
