@@ -115,4 +115,36 @@ final class ProgressTests: XCTestCase {
         XCTAssertEqual(LessonCatalog.lessons.map(\.id), Array(1...42))
         XCTAssertTrue(LessonCatalog.lessons.allSatisfy { !$0.body.isEmpty && !$0.prompt.isEmpty && !$0.action.isEmpty })
     }
+
+    func testTriggersAreRankedAndSensitiveSlotsLimitedToThree() {
+        let now = date("2026-10-05T12:00:00Z")
+        var data = QuitData()
+        data.profile.startedAt = date("2026-10-01T12:00:00Z")
+        data.episodes = [Episode(date: now, emotion: .tired, context: .bed, trigger: .habit),
+                         Episode(date: now, emotion: .tired, context: .bed, trigger: .habit),
+                         Episode(date: now, emotion: .lonely, context: .desk, trigger: .scrolling)]
+        let stats = ProgressSnapshot(data: data, now: now, calendar: calendar)
+        XCTAssertEqual(stats.triggers.first?.trigger, .habit)
+        XCTAssertEqual(stats.triggers.first?.count, 2)
+        XCTAssertLessThanOrEqual(stats.topSensitive.count, 3)
+    }
+
+    func testInsufficientDataFlagAndMedianRecovery() {
+        let now = date("2026-10-05T12:00:00Z")
+        var empty = QuitData()
+        empty.profile.startedAt = date("2026-10-01T12:00:00Z")
+        XCTAssertTrue(ProgressSnapshot(data: empty, now: now, calendar: calendar).insufficientData)
+        var episode = Episode(date: now.addingTimeInterval(-7200), emotion: .tired, context: .bed, trigger: .habit)
+        episode.recoveredAt = now.addingTimeInterval(-3600)
+        var data = QuitData()
+        data.profile.startedAt = date("2026-10-01T12:00:00Z")
+        data.episodes = [episode]
+        data.checkIns = (0..<7).map { i in
+            DailyCheckIn(date: date("2026-10-0\(1 + (i % 5))T12:00:00Z"), emotion: .calm, energy: 2, stress: 1, urge: 2, aligned: true)
+        }
+        let stats = ProgressSnapshot(data: data, now: now, calendar: calendar)
+        XCTAssertFalse(stats.insufficientData)
+        XCTAssertEqual(stats.recoveryCount, 1)
+        XCTAssertEqual(stats.medianRecoveryHours!, 1, accuracy: 0.001)
+    }
 }

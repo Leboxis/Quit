@@ -28,6 +28,11 @@ struct ProgressSnapshot {
     let strategies: [StrategyResult]
     let emotions: [(emotion: Emotion, count: Int)]
     let heatmap: [HeatCell]
+    let triggers: [(trigger: Trigger, count: Int)]
+    let topSensitive: [HeatCell]
+    let medianRecoveryHours: Double?
+    let recoveryCount: Int
+    let insufficientData: Bool
 
     var alignedDays: Int { days.filter { $0.state == .aligned }.count }
     var episodeDays: Int { days.filter { $0.state == .episode }.count }
@@ -77,13 +82,31 @@ struct ProgressSnapshot {
             (emotion: emotion, count: relevantUrges.filter { $0.emotion == emotion }.count + relevantEpisodes.filter { $0.emotion == emotion }.count)
         }.filter { $0.count > 0 }.sorted { $0.count > $1.count }
         let dates = relevantUrges.map(\.date) + relevantEpisodes.map(\.date)
-        heatmap = (0..<4).flatMap { bucket in
+        let cells = (0..<4).flatMap { bucket in
             (1...7).map { weekday in
                 HeatCell(weekday: weekday, bucket: bucket, count: dates.filter {
                     calendar.component(.weekday, from: $0) == weekday && Self.bucket(for: calendar.component(.hour, from: $0)) == bucket
                 }.count)
             }
         }
+        heatmap = cells
+        triggers = Trigger.allCases.map { trigger in
+            (trigger: trigger, count: relevantEpisodes.filter { $0.trigger == trigger }.count)
+        }.filter { $0.count > 0 }.sorted { $0.count > $1.count }
+        topSensitive = cells.filter { $0.count > 0 }.sorted { $0.count > $1.count }.prefix(3).map { $0 }
+        let intervals = relevantEpisodes.compactMap { episode in
+            episode.recoveredAt.map { max(0, $0.timeIntervalSince(episode.date)) / 3600 }
+        }.sorted()
+        recoveryCount = intervals.count
+        if intervals.isEmpty {
+            medianRecoveryHours = nil
+        } else if intervals.count % 2 == 1 {
+            medianRecoveryHours = intervals[intervals.count / 2]
+        } else {
+            medianRecoveryHours = (intervals[intervals.count / 2 - 1] + intervals[intervals.count / 2]) / 2
+        }
+        let observed = records.filter { $0.state != .unknown }.count
+        insufficientData = relevantUrges.count < 3 && relevantEpisodes.isEmpty && observed < 7
     }
 
     static func bucket(for hour: Int) -> Int {
