@@ -18,6 +18,15 @@
       "tintColor": "346451",
       "versions": [
         {
+          "version": "0.2.11",
+          "buildVersion": "11",
+          "date": "2026-10-06",
+          "localizedDescription": "Quit V2 : trois ambiances, apparence claire/sombre, confort visuel et SOS à durée choisie. Journal, parcours et progrès privés conservés.",
+          "downloadURL": "https://github.com/Leboxis/Quit/releases/download/v0.2.11/Quit.ipa",
+          "size": 1198237,
+          "minOSVersion": "18.0"
+        },
+        {
           "version": "0.2.10",
           "buildVersion": "10",
           "date": "2026-10-06",
@@ -63,11 +72,11 @@
           "minOSVersion": "18.0"
         }
       ],
-      "version": "0.2.10",
+      "version": "0.2.11",
       "versionDate": "2026-10-06",
       "versionDescription": "Quit V2 : trois ambiances, apparence claire/sombre, confort visuel et SOS à durée choisie. Journal, parcours et progrès privés conservés.",
-      "downloadURL": "https://github.com/Leboxis/Quit/releases/download/v0.2.10/Quit.ipa",
-      "size": 1111128,
+      "downloadURL": "https://github.com/Leboxis/Quit/releases/download/v0.2.11/Quit.ipa",
+      "size": 1198237,
       "appPermissions": {
         "entitlements": [],
         "privacy": {
