@@ -6,6 +6,7 @@ struct SOSView: View {
     @Environment(AppStore.self) private var store
     @Environment(\.dismiss) private var dismiss
     @Environment(\.quitReduceMotion) private var reduceMotion
+    @Environment(\.scenePhase) private var scenePhase
     @State private var step: Step = .intensity
     @State private var initial = 5.0
     @State private var final = 5.0
@@ -57,6 +58,11 @@ struct SOSView: View {
             .sheet(isPresented: $showEpisode) { EpisodeView(existingID: savedEpisodeID) }
         }
         .onAppear { if step == .intensity { duration = store.data.experience.observationDuration } }
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active && step == .observe {
+                remaining = max(0, Int(ceil(deadline.timeIntervalSinceNow)))
+            }
+        }
         .task(id: "\(step.rawValue)-\(deadline.timeIntervalSinceReferenceDate)") {
             guard step == .observe else { return }
             while !Task.isCancelled && remaining > 0 {
@@ -73,7 +79,7 @@ struct SOSView: View {
             QuitCard { IntensitySlider(title: "Intensité de l'envie", value: $initial) }
             Picker("Temps d'observation", selection: $duration) {
                 ForEach(ObservationDuration.allCases) { Text($0.title).tag($0) }
-            }.pickerStyle(.segmented).accessibilityIdentifier("sos.duration")
+            }.modifier(QuitAdaptivePickerStyle()).accessibilityIdentifier("sos.duration")
             Text("Juste avant, tu te sentais…").font(.headline)
             EmotionPicker(selection: $emotion)
         }
@@ -221,8 +227,25 @@ private struct ObservationDial: View {
     let total: Int
     @Environment(\.quitAccent) private var accent
     @Environment(\.quitReduceMotion) private var reduceMotion
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     var body: some View {
+        Group {
+            if dynamicTypeSize.isAccessibilitySize {
+                VStack(alignment: .leading, spacing: 14) {
+                    timeLabel
+                    ProgressView(value: Double(max(0, remaining)), total: Double(total)).tint(accent.color)
+                }.frame(maxWidth: .infinity, alignment: .leading)
+            } else {
+                dial.frame(height: 206)
+            }
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Temps d'observation restant").accessibilityValue("\(remaining) secondes")
+        .accessibilityIdentifier("sos.timer")
+    }
+
+    private var dial: some View {
         ZStack {
             ContourArtwork(animated: remaining > 0).opacity(0.35)
             Circle().fill(accent.soft).frame(width: 184, height: 184)
@@ -231,15 +254,17 @@ private struct ObservationDial: View {
                 .stroke(accent.color, style: StrokeStyle(lineWidth: 3, lineCap: .round))
                 .rotationEffect(.degrees(-90)).frame(width: 188, height: 188)
                 .animation(reduceMotion ? nil : .linear(duration: 0.6), value: remaining)
-            VStack(spacing: 6) {
-                Text(String(format: "%02d:%02d", remaining / 60, remaining % 60))
-                    .font(.system(.largeTitle, design: .rounded, weight: .medium)).monospacedDigit()
-                Text("Observe, simplement.").font(.caption).foregroundStyle(QuitTheme.secondary)
-            }.foregroundStyle(accent.color)
+            timeLabel
         }
-        .frame(height: 206)
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Temps d'observation restant").accessibilityValue("\(remaining) secondes")
-        .accessibilityIdentifier("sos.timer")
+    }
+
+    private var timeLabel: some View {
+        VStack(spacing: 6) {
+            Text(String(format: "%02d:%02d", remaining / 60, remaining % 60))
+                .font(.system(.largeTitle, design: .rounded, weight: .medium)).monospacedDigit()
+            Text("Observe, simplement.").font(.caption).foregroundStyle(QuitTheme.secondary)
+        }
+        .fixedSize(horizontal: false, vertical: true)
+        .foregroundStyle(accent.color)
     }
 }

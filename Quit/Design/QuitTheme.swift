@@ -70,6 +70,7 @@ struct QuitPrimaryButton: View {
             HStack(spacing: 10) {
                 if let symbol { Image(systemName: symbol) }
                 Text(title).font(.headline)
+                    .fixedSize(horizontal: false, vertical: true)
             }
             .foregroundStyle(accent.foreground)
             .frame(maxWidth: .infinity, minHeight: 44)
@@ -133,20 +134,25 @@ struct EmotionPicker: View {
     @Environment(\.quitAccent) private var accent
     @Environment(\.quitReduceMotion) private var reduceMotion
     @Environment(\.quitHaptics) private var haptics
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @ScaledMetric(relativeTo: .subheadline) private var choiceWidth = 100.0
     @Binding var selection: Emotion
     var body: some View {
-        LazyVGrid(columns: [GridItem(.adaptive(minimum: 100))], spacing: 10) {
+        LazyVGrid(columns: dynamicTypeSize.isAccessibilitySize ? [GridItem(.flexible())] : [GridItem(.adaptive(minimum: choiceWidth))], spacing: 10) {
             ForEach(Emotion.allCases) { emotion in
                 Button {
                     selection = emotion
                 } label: {
                     Label(emotion.title, systemImage: emotion.symbol)
                         .font(.subheadline)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(.horizontal, 12).padding(.vertical, 8)
                         .frame(maxWidth: .infinity, minHeight: 44)
                         .foregroundStyle(selection == emotion ? accent.foreground : QuitTheme.text)
                         .background(selection == emotion ? accent.color : QuitTheme.surface, in: Capsule())
                 }
                 .buttonStyle(.plain)
+                .accessibilityIdentifier("emotion.\(emotion.rawValue)")
                 .accessibilityAddTraits(selection == emotion ? [.isSelected] : [])
             }
         }
@@ -157,15 +163,22 @@ struct EmotionPicker: View {
 
 struct IntensitySlider: View {
     @Environment(\.quitAccent) private var accent
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     let title: String
     @Binding var value: Double
     var body: some View {
         VStack(spacing: 14) {
-            HStack(alignment: .firstTextBaseline) {
+            let layout = dynamicTypeSize.isAccessibilitySize
+                ? AnyLayout(VStackLayout(alignment: .leading, spacing: 8))
+                : AnyLayout(HStackLayout(alignment: .firstTextBaseline))
+            layout {
                 Text(title).font(.headline)
-                Spacer()
-                Text("\(Int(value))").font(.system(.largeTitle, design: .rounded, weight: .medium)).monospacedDigit()
-                Text("/ 10").foregroundStyle(QuitTheme.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                if !dynamicTypeSize.isAccessibilitySize { Spacer() }
+                HStack(alignment: .firstTextBaseline) {
+                    Text("\(Int(value))").font(.system(.largeTitle, design: .rounded, weight: .medium)).monospacedDigit()
+                    Text("/ 10").foregroundStyle(QuitTheme.secondary)
+                }
             }
             Slider(value: $value, in: 0...10, step: 1) { Text(title) }
                 .tint(accent.color)
@@ -175,6 +188,19 @@ struct IntensitySlider: View {
                 Spacer()
                 Text("Intense")
             }.font(.caption).foregroundStyle(QuitTheme.secondary)
+        }
+    }
+}
+
+// Native menu choices can grow vertically where segmented labels cannot fit.
+struct QuitAdaptivePickerStyle: ViewModifier {
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
+    @ViewBuilder func body(content: Content) -> some View {
+        if dynamicTypeSize.isAccessibilitySize {
+            content.pickerStyle(.menu).frame(minHeight: 44)
+        } else {
+            content.pickerStyle(.segmented)
         }
     }
 }

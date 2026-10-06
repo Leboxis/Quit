@@ -2,6 +2,7 @@ import SwiftUI
 
 struct JournalView: View {
     @Environment(AppStore.self) private var store
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var selectedEpisode: Episode?
     @State private var deleteID: UUID?
     var body: some View {
@@ -15,9 +16,12 @@ struct JournalView: View {
                     Text("Épisode · \(episode.emotion.title)").font(.headline)
                     Text("\(episode.context.title) · \(episode.trigger.title)").font(.subheadline).foregroundStyle(QuitTheme.secondary)
                     if !episode.interruption.isEmpty { Text(episode.interruption) }
-                    HStack {
+                    let layout = dynamicTypeSize.isAccessibilitySize
+                        ? AnyLayout(VStackLayout(alignment: .leading, spacing: 8))
+                        : AnyLayout(HStackLayout())
+                    layout {
                         Button("Comprendre") { selectedEpisode = episode }.frame(minHeight: 44)
-                        Spacer()
+                        if !dynamicTypeSize.isAccessibilitySize { Spacer() }
                         if episode.recoveredAt == nil {
                             Button("Reprendre mon plan") { store.update { data in
                                 if let index = data.episodes.firstIndex(where: { $0.id == episode.id }) { data.episodes[index].recoveredAt = Date() }

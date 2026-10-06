@@ -34,7 +34,7 @@ struct CheckInView: View {
                         Text("Pas encore sûr").tag(0)
                         Text("Oui").tag(1)
                         Text("Non").tag(2)
-                    }.pickerStyle(.segmented)
+                    }.modifier(QuitAdaptivePickerStyle())
                     Text("Une réponse incertaine reste un jour sans bilan. Tu peux la modifier plus tard.")
                         .font(.footnote).foregroundStyle(QuitTheme.secondary)
                 }
@@ -60,7 +60,7 @@ struct CheckInView: View {
                 Text(labels[0]).tag(1)
                 Text(labels[1]).tag(2)
                 Text(labels[2]).tag(3)
-            }.pickerStyle(.segmented)
+            }.modifier(QuitAdaptivePickerStyle())
         }
     }
 }

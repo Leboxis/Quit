@@ -16,6 +16,8 @@ struct QuitBackup: FileDocument {
 struct SettingsView: View {
     @Environment(AppStore.self) private var store
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.scenePhase) private var phase
+    @Environment(\.openURL) private var openURL
     @State private var showExporter = false
     @State private var showImporter = false
     @State private var importURL: URL?
@@ -27,6 +29,9 @@ struct SettingsView: View {
     @State private var goal: Goal = .stop
     @State private var reminderDate = Date()
     @State private var busy = false
+    @State private var lockContext: LAContext?
+    @State private var reminderStatus: ReminderStatus?
+    @State private var reminderStatusRequest = UUID()
     @State private var notice: String?
 
     var body: some View {
@@ -58,12 +63,24 @@ struct SettingsView: View {
                     Text("Le verrouillage utilise Face ID, Touch ID ou le code de l'appareil. Sa disponibilité dépend aussi de ton installation.")
                 }
                 Section {
+                    Text(reminderStatus?.message ?? "Vérification du rappel…")
+                        .font(.footnote).foregroundStyle(QuitTheme.secondary)
+                        .accessibilityIdentifier("reminder.status")
                     DatePicker("Heure", selection: $reminderDate, displayedComponents: .hourAndMinute)
-                    Button(store.data.profile.reminderEnabled ? "Actualiser le rappel" : "Activer un rappel discret") { Task { await configureReminder() } }
+                    Button(reminderStatus == .scheduled || reminderStatus == .quiet ? "Actualiser le rappel" : "Activer un rappel discret") { Task { await configureReminder() } }
                         .disabled(busy)
+                    if reminderStatus == .denied || reminderStatus == .quiet {
+                        Button("Ouvrir les réglages iOS") {
+                            if let url = URL(string: UIApplication.openSettingsURLString) { openURL(url) }
+                        }
+                    }
                     if store.data.profile.reminderEnabled {
                         Button("Désactiver le rappel") {
-                            if store.update({ $0.profile.reminderEnabled = false }) { ReminderService.cancel() }
+                            if store.update({ $0.profile.reminderEnabled = false }) {
+                                ReminderService.cancel()
+                                reminderStatusRequest = UUID()
+                                reminderStatus = .disabled
+                            }
                         }
                     }
                 } header: { Text("Rappel facultatif") } footer: {
@@ -87,9 +104,18 @@ struct SettingsView: View {
                         .foregroundStyle(QuitTheme.secondary)
                 }
             }
+            .disabled(busy)
             .scrollContentBackground(.hidden).background(QuitTheme.background)
             .navigationTitle("Réglages").navigationBarTitleDisplayMode(.inline)
-            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Terminé") { dismiss() }.accessibilityIdentifier("settings.done") } }
+            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Terminé") { dismiss() }.disabled(busy).accessibilityIdentifier("settings.done") } }
+            .interactiveDismissDisabled(busy)
+            .task(id: phase) {
+                if phase == .active && !busy { await refreshReminderStatus() }
+            }
+            .onChange(of: phase) { _, value in
+                if value == .background { cancelLockChange() }
+            }
+            .onDisappear { cancelLockChange() }
             .onAppear {
                 name = store.data.profile.name
                 intention = store.data.profile.intention
@@ -124,27 +150,59 @@ struct SettingsView: View {
     }
 
     private func setLock(_ enabled: Bool) async {
+        guard !busy, phase == .active else { return }
         busy = true
-        defer { busy = false }
+        let context = LAContext()
+        lockContext = context
+        defer {
+            if lockContext === context { lockContext = nil; busy = false }
+        }
         do {
-            let context = LAContext()
-            if try await context.evaluatePolicy(.deviceOwnerAuthentication, localizedReason: "Modifier la confidentialité de Quit") {
+            let succeeded = try await context.evaluatePolicy(.deviceOwnerAuthentication, localizedReason: "Modifier la confidentialité de Quit")
+            guard lockContext === context else { return }
+            if succeeded {
                 store.update { $0.profile.biometricLock = enabled }
             }
-        } catch { notice = "Le verrouillage n'a pas été modifié. " + error.localizedDescription }
+        } catch {
+            guard lockContext === context else { return }
+            notice = "Le verrouillage n'a pas été modifié. " + error.localizedDescription
+        }
+    }
+
+    private func cancelLockChange() {
+        guard let context = lockContext else { return }
+        lockContext = nil
+        context.invalidate()
+        busy = false
+    }
+
+    private func refreshReminderStatus() async {
+        let request = UUID()
+        reminderStatusRequest = request
+        let profile = store.data.profile
+        let status = await ReminderService.status(for: profile)
+        guard reminderStatusRequest == request,
+              profile.reminderEnabled == store.data.profile.reminderEnabled,
+              profile.reminderHour == store.data.profile.reminderHour,
+              profile.reminderMinute == store.data.profile.reminderMinute else { return }
+        reminderStatus = status
     }
 
     private func configureReminder() async {
+        guard !busy else { return }
         busy = true
+        reminderStatusRequest = UUID()
+        reminderStatus = nil
         defer { busy = false }
         let hour = Calendar.current.component(.hour, from: reminderDate)
         let minute = Calendar.current.component(.minute, from: reminderDate)
         do {
             if try await ReminderService.configure(hour: hour, minute: minute) {
                 if !store.update({ $0.profile.reminderEnabled = true; $0.profile.reminderHour = hour; $0.profile.reminderMinute = minute }) { ReminderService.cancel() }
-                else { notice = "Le rappel discret est activé." }
+                else { notice = "Le rappel discret est programmé. Sa réception dépend des réglages iOS et de ton installation." }
             } else { notice = "Notifications non autorisées. Tu peux les activer dans les réglages iOS si cette installation le permet." }
         } catch { notice = "Rappel indisponible. " + error.localizedDescription }
+        await refreshReminderStatus()
     }
 
     private func importBackup() {
@@ -152,6 +210,8 @@ struct SettingsView: View {
         do {
             try readBackup(from: url, into: store)
             ReminderService.cancel()
+            reminderStatusRequest = UUID()
+            reminderStatus = .disabled
             name = store.data.profile.name; intention = store.data.profile.intention; goal = store.data.profile.goal
             notice = "Sauvegarde importée. Réactive ton rappel si tu le souhaites."
         } catch { notice = "L'import n'a pas été effectué. " + error.localizedDescription }

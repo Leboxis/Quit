@@ -26,7 +26,7 @@ struct AppearanceSettingsView: View {
                 Text("Clair ou sombre").font(.headline)
                 Picker("Apparence", selection: preference(\.appearance)) {
                     ForEach(AppAppearance.allCases) { Text($0.title).tag($0) }
-                }.pickerStyle(.segmented).accessibilityIdentifier("appearance.mode")
+                }.modifier(QuitAdaptivePickerStyle()).accessibilityIdentifier("appearance.mode")
                 Text("Automatique suit le réglage de ton appareil.").font(.footnote).foregroundStyle(QuitTheme.secondary)
             }
             QuitCard {
@@ -42,7 +42,7 @@ struct AppearanceSettingsView: View {
                 Text("Ton temps d'observation").font(.headline)
                 Picker("Durée du SOS", selection: preference(\.observationDuration)) {
                     ForEach(ObservationDuration.allCases) { Text($0.title).tag($0) }
-                }.pickerStyle(.segmented).accessibilityIdentifier("comfort.duration")
+                }.modifier(QuitAdaptivePickerStyle()).accessibilityIdentifier("comfort.duration")
                 Text("90 secondes, 3 ou 5 minutes. Tu peux toujours passer à une action avant la fin.")
                     .font(.footnote).foregroundStyle(QuitTheme.secondary)
             }

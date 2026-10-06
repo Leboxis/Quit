@@ -59,7 +59,7 @@ struct OnboardingView: View {
             Text("Ton objectif t'appartient. Il pourra évoluer.").foregroundStyle(QuitTheme.secondary)
             Picker("Mon objectif", selection: $goal) {
                 ForEach(Goal.allCases) { Text($0.title).tag($0) }
-            }.pickerStyle(.segmented)
+            }.modifier(QuitAdaptivePickerStyle())
             TextField("Prénom ou pseudonyme (facultatif)", text: $name)
                 .textContentType(.nickname).textFieldStyle(.roundedBorder)
                 .onChange(of: name) { _, value in name = String(value.prefix(100)) }

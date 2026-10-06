@@ -5,11 +5,11 @@ struct RootView: View {
     @Environment(\.quitAccent) private var accent
     @Environment(AppStore.self) private var store
     @Environment(\.scenePhase) private var phase
-    @State private var unlocked = false
-    @State private var authenticating = false
+    @State private var lock = AppLockState()
+    @State private var authContext: LAContext?
     @State private var authError: String?
 
-    private var requiresUnlock: Bool { store.data.profile.biometricLock && !unlocked }
+    private var requiresUnlock: Bool { store.data.profile.biometricLock && !lock.unlocked }
     var body: some View {
         ZStack {
             Group {
@@ -31,9 +31,9 @@ struct RootView: View {
                     Text("Quit").font(.largeTitle.weight(.semibold))
                     if phase == .active && requiresUnlock {
                         Text("Ton espace personnel").foregroundStyle(QuitTheme.secondary)
-                        QuitPrimaryButton(title: authenticating ? "Déverrouillage…" : "Déverrouiller", symbol: "lock.open") {
+                        QuitPrimaryButton(title: lock.authenticating ? "Déverrouillage…" : "Déverrouiller", symbol: "lock.open") {
                             Task { await authenticate() }
-                        }.disabled(authenticating).frame(maxWidth: 280)
+                        }.disabled(lock.authenticating).frame(maxWidth: 280)
                         if let authError { Text(authError).font(.footnote).foregroundStyle(QuitTheme.secondary).padding() }
                     }
                 }
@@ -43,7 +43,12 @@ struct RootView: View {
         }
         .foregroundStyle(QuitTheme.text)
         .onChange(of: phase) { _, value in
-            if value != .active { unlocked = false }
+            lock.sceneChanged(to: value)
+            if value == .background {
+                authContext?.invalidate()
+                authContext = nil
+                authError = nil
+            }
         }
         .alert("Enregistrement impossible", isPresented: Binding(get: { store.errorMessage != nil }, set: { if !$0 { store.errorMessage = nil } })) {
             Button("Compris") { store.errorMessage = nil }
@@ -51,16 +56,19 @@ struct RootView: View {
     }
 
     private func authenticate() async {
-        authenticating = true
+        guard phase == .active, let token = lock.beginAuthentication() else { return }
         authError = nil
         let context = LAContext()
+        authContext = context
         do {
-            unlocked = try await context.evaluatePolicy(.deviceOwnerAuthentication,
-                                                       localizedReason: "Ouvrir ton espace personnel Quit")
+            let succeeded = try await context.evaluatePolicy(.deviceOwnerAuthentication,
+                                                             localizedReason: "Ouvrir ton espace personnel Quit")
+            guard lock.finishAuthentication(token, succeeded: succeeded, phase: phase) else { return }
         } catch {
+            guard lock.finishAuthentication(token, succeeded: false, phase: phase) else { return }
             authError = "Déverrouillage indisponible. Réessaie avec Face ID ou le code de l'appareil."
         }
-        authenticating = false
+        authContext = nil
     }
 }
 
