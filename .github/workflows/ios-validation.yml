@@ -71,7 +71,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: quit-native-${{ matrix.size }}-${{ github.run_number }}
-          compression-level: 0
+          # A failure is diagnosed within the day; keeping the daily evidence
+          # for longer only fills the repository's artifact storage allowance.
+          retention-days: 2
           path: |
             build/TestResults.xcresult
             build/TestSummary.json
